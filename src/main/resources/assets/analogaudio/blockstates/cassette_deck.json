@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "analogaudio:block/cassette_deck" },
+    "facing=south": { "model": "analogaudio:block/cassette_deck", "y": 180 },
+    "facing=west": { "model": "analogaudio:block/cassette_deck", "y": 270 },
+    "facing=east": { "model": "analogaudio:block/cassette_deck", "y": 90 }
+  }
+}

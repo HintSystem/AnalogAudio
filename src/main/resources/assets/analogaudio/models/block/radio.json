@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "analogaudio:block/radio_bottom",
+    "up": "analogaudio:block/radio_top",
+    "north": "analogaudio:block/radio_front",
+    "east": "analogaudio:block/radio_side",
+    "south": "analogaudio:block/radio_side",
+    "west": "analogaudio:block/radio_side",
+    "particle": "analogaudio:block/radio_side"
+  }
+}

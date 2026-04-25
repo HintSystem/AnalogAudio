@@ -1,0 +1,27 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "voicechat"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " X ",
+    "XBX",
+    " X "
+  ],
+  "key": {
+    "X": {
+      "tag": "minecraft:wool"
+    },
+    "B": {
+      "item": "minecraft:note_block"
+    }
+  },
+  "result": {
+    "id": "analogaudio:speaker",
+    "count": 1
+  }
+}

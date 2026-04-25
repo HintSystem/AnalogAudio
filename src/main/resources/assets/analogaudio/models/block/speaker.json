@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "down": "analogaudio:block/speaker",
+    "up": "analogaudio:block/speaker",
+    "north": "analogaudio:block/speaker",
+    "east": "analogaudio:block/speaker",
+    "south": "analogaudio:block/speaker",
+    "west": "analogaudio:block/speaker",
+    "particle": "analogaudio:block/speaker"
+  }
+}

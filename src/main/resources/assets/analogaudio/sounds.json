@@ -1,0 +1,62 @@
+{
+  "write": {
+    "subtitle": "subtitles.analogaudio.write",
+    "sounds": [
+      "analogaudio:write"
+    ]
+  },
+  "erase": {
+    "subtitle": "subtitles.analogaudio.erase",
+    "sounds": [
+      "analogaudio:erase"
+    ]
+  },
+  "walkie_press": {
+    "subtitle": "subtitles.analogaudio.walkie_press",
+    "sounds": [
+      "analogaudio:walkie_press"
+    ]
+  },
+  "walkie_unpress": {
+    "subtitle": "subtitles.analogaudio.walkie_unpress",
+    "sounds": [
+      "analogaudio:walkie_unpress"
+    ]
+  },
+  "frequency_tick": {
+    "subtitle": "subtitles.analogaudio.frequency_tick",
+    "sounds": [
+      "analogaudio:frequency_tick"
+    ]
+  },
+  "frequency_select": {
+    "subtitle": "subtitles.analogaudio.frequency_select",
+    "sounds": [
+      "analogaudio:frequency_select"
+    ]
+  },
+  "cassette_insert": {
+    "subtitle": "subtitles.analogaudio.cassette_insert",
+    "sounds": [
+      "analogaudio:cassette_insert"
+    ]
+  },
+  "cassette_eject": {
+    "subtitle": "subtitles.analogaudio.cassette_eject",
+    "sounds": [
+      "analogaudio:cassette_eject"
+    ]
+  },
+  "switch_on": {
+    "subtitle": "subtitles.analogaudio.switch_on",
+    "sounds": [
+      "analogaudio:switch_on"
+    ]
+  },
+  "switch_off": {
+    "subtitle": "subtitles.analogaudio.switch_off",
+    "sounds": [
+      "analogaudio:switch_off"
+    ]
+  }
+}

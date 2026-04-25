@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "analogaudio:item/cassette_tape",
+    "layer1": "analogaudio:item/cassette_shell"
+  }
+}

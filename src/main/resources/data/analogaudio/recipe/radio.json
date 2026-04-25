@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " X ",
+    "XBX",
+    " X "
+  ],
+  "key": {
+    "X": {
+      "item": "minecraft:copper_ingot"
+    },
+    "B": {
+      "item": "minecraft:note_block"
+    }
+  },
+  "result": {
+    "id": "analogaudio:radio",
+    "count": 1
+  }
+}

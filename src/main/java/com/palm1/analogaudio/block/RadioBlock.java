@@ -1,0 +1,144 @@
+package com.palm1.analogaudio.block;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+
+import org.jetbrains.annotations.Nullable;
+
+import com.mojang.serialization.MapCodec;
+
+import com.palm1.analogaudio.block.entity.RadioBlockEntity;
+import com.palm1.analogaudio.client.audio.ClientAudioEngine;
+import com.palm1.analogaudio.item.CassetteData;
+import com.palm1.analogaudio.registry.ModBlockEntities;
+import com.palm1.analogaudio.registry.ModDataComponents;
+
+public class RadioBlock extends BaseEntityBlock {
+    public static final MapCodec<RadioBlock> CODEC = simpleCodec(RadioBlock::new);
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+
+    public RadioBlock(Properties properties) {
+        super(properties);
+        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(
+            StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(FACING);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
+    public BlockState rotate(BlockState state, Rotation rot) {
+        return state.setValue(FACING, rot.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    public BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+            BlockHitResult hit) {
+        if (!level.isClientSide()) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof RadioBlockEntity radio) {
+                player.openMenu(radio, pos);
+            }
+        }
+        return InteractionResult.sidedSuccess(level.isClientSide());
+    }
+
+    @Override
+    protected void neighborChanged(BlockState state, Level level, BlockPos pos,
+            Block neighborBlock, BlockPos neighborPos, boolean movedByPiston) {
+        if (!level.isClientSide()) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof RadioBlockEntity radio) {
+                radio.setPowered(level.hasNeighborSignal(pos));
+            }
+        }
+    }
+
+    @Override
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new RadioBlockEntity(pos, state);
+    }
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
+            BlockEntityType<T> blockEntityType) {
+        if (level.isClientSide()) {
+            return createTickerHelper(blockEntityType, ModBlockEntities.RADIO.get(), (lvl, pos, st, entity) -> {
+                ItemStack cassette = entity.getCassette();
+                if (cassette != null && !cassette.isEmpty() && entity.getStartTime() != 0) {
+                    CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
+                    if (data != null) {
+                        ClientAudioEngine.tickRadio(pos, Vec3.atCenterOf(pos), data,
+                                entity.getStartTime(), entity.getVolume(), entity.isLooping());
+
+                        if (lvl.getGameTime() % 10 == 0 && entity.isPlaying()) {
+                            double x = pos.getX() + 0.5 + (lvl.random.nextDouble() - 0.5) * 0.4;
+                            double y = pos.getY() + 0.8;
+                            double z = pos.getZ() + 0.5 + (lvl.random.nextDouble() - 0.5) * 0.4;
+
+                            float colorOffset = (float) (data.color() & 0xFFFFFF) / 0xFFFFFF;
+                            lvl.addParticle(ParticleTypes.NOTE, x, y, z, colorOffset, 0,
+                                    0);
+                        }
+                        return;
+                    }
+                }
+                ClientAudioEngine.stopRadio(pos);
+            });
+        }
+        return null;
+    }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            if (level.isClientSide()) {
+                ClientAudioEngine.stopRadio(pos);
+            }
+            super.onRemove(state, level, pos, newState, isMoving);
+        }
+    }
+}

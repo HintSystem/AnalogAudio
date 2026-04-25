@@ -1,0 +1,39 @@
+{
+  // Block Translations
+  "block.analogaudio.cassette_deck": "Cassette Deck",
+  "block.analogaudio.radio": "Radio Block",
+  "block.analogaudio.speaker": "Speaker Block",
+  // Item Translations
+  "item.analogaudio.cassette_tape": "Cassette Tape",
+  "item.analogaudio.walkie_talkie": "Walkie Talkie",
+  // GUI Translations
+  "gui.analogaudio.cassette_deck.url": "Audio URL (.ogg)",
+  "gui.analogaudio.cassette_deck.name": "Audio Name",
+  "gui.analogaudio.cassette_deck.write": "Write Tape",
+  "gui.analogaudio.cassette_deck.erase": "Erase Tape",
+  "gui.analogaudio.cassette_deck.select_color": "Select Color",
+  "gui.analogaudio.cassette_deck.status.invalid_url": "Error: Invalid audio URL.",
+  "gui.analogaudio.cassette_deck.status.write_success": "Success!",
+  "gui.analogaudio.cassette_deck.status.write_fail": "Failed to write.",
+  "gui.analogaudio.cassette_deck.status.erase_success": "Erased!",
+  "gui.analogaudio.cassette_deck.status.erase_fail": "Failed to erase.",
+  "gui.analogaudio.cassette_deck.status.downloading": "Downloading Audio...",
+  "gui.analogaudio.cassette_deck.status.download_fail": "Audio failed to download.",
+  "gui.analogaudio.cassette_deck.status.insert_cassette": "Insert cassette.",
+  "gui.analogaudio.cassette_deck.status.writing": "Writing...",
+  "gui.analogaudio.cassette_deck.status.erased": "Erased!",
+  "gui.analogaudio.cassette_deck.status.error_code": "Error: %s",
+  "gui.analogaudio.rotary_tuner.title": "Tuning Frequency",
+  "gui.analogaudio.radio.play": "Play",
+  "gui.analogaudio.radio.pause": "Pause",
+  "gui.analogaudio.radio.loop": "Toggle Loop",
+  // Tooltip Translations
+  "tooltip.analogaudio.walkie_talkie.frequency": "Frequency: %s",
+  // Creative Category Translations
+  "itemGroup.analogaudio.analog_audio_tab": "Analog Audio",
+  // Voice Chat Category Translations
+  "voicechat.category.walkie_talkies": "Walkie Talkies",
+  "voicechat.category.walkie_talkies.description": "Adjust the volume of walkie talkie signals.",
+  "voicechat.category.speaker_blocks": "Speaker Blocks",
+  "voicechat.category.speaker_blocks.description": "Adjust the volume of audio broadcasted by speakers."
+}
