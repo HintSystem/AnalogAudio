@@ -55,7 +55,8 @@ public class AnalogAudioClient {
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.RADIO.get(), RadioBlockRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.CASSETTE_DECK.get(), CassetteDeckBlockRenderer::new);
-        event.registerBlockEntityRenderer(ModBlockEntities.SPEAKER.get(), SpeakerBlockRenderer::new);
+        if (ModBlockEntities.SPEAKER != null)
+            event.registerBlockEntityRenderer(ModBlockEntities.SPEAKER.get(), SpeakerBlockRenderer::new);
     }
 
     @SubscribeEvent

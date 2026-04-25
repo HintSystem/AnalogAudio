@@ -3,6 +3,7 @@ package com.palm1.analogaudio.registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.fml.ModList;
 
 import java.util.function.Supplier;
 
@@ -22,7 +23,7 @@ public class ModBlockEntities {
         public static final Supplier<BlockEntityType<RadioBlockEntity>> RADIO = BLOCK_ENTITIES.register("radio",
                         () -> BlockEntityType.Builder.of(RadioBlockEntity::new, ModBlocks.RADIO.get()).build(null));
 
-        public static final Supplier<BlockEntityType<SpeakerBlockEntity>> SPEAKER = BLOCK_ENTITIES
+        public static final Supplier<BlockEntityType<SpeakerBlockEntity>> SPEAKER = ModList.get().isLoaded("voicechat") ? BLOCK_ENTITIES
                         .register("speaker",
-                                         () -> BlockEntityType.Builder.of(SpeakerBlockEntity::new, ModBlocks.SPEAKER.get()).build(null));
+                                         () -> BlockEntityType.Builder.of(SpeakerBlockEntity::new, ModBlocks.SPEAKER.get()).build(null)) : null;
 }

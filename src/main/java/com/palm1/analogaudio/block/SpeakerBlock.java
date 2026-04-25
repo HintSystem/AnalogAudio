@@ -93,7 +93,7 @@ public class SpeakerBlock extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,
             BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide) {
+        if (level.isClientSide && ModBlockEntities.SPEAKER != null) {
             return createTickerHelper(type, ModBlockEntities.SPEAKER.get(), (l, p, s, be) -> {
                 be.clientTick();
             });

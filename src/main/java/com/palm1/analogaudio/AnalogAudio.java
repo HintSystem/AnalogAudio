@@ -48,6 +48,8 @@ public class AnalogAudio {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(com.palm1.analogaudio.integration.SableCompat::init);
-        LOGGER.info("Successfully integrated voice chat!");
+        if (net.neoforged.fml.ModList.get().isLoaded("voicechat")) {
+            LOGGER.info("Successfully integrated voice chat!");
+        }
     }
 }
