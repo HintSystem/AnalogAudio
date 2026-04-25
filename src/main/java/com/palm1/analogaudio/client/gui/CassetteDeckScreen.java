@@ -49,11 +49,11 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
             "textures/gui/sprites/icons/erase_selected.png");
 
     private static final ResourceLocation COLOR_NORMAL = ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID,
-            "textures/gui/sprites/icons/color_button.png");
+            "textures/gui/sprites/icons/color.png");
     private static final ResourceLocation COLOR_HOVER = ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID,
-            "textures/gui/sprites/icons/color_button_hover.png");
+            "textures/gui/sprites/icons/color_hover.png");
     private static final ResourceLocation COLOR_SELECTED = ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID,
-            "textures/gui/sprites/icons/color_button_selected.png");
+            "textures/gui/sprites/icons/color_selected.png");
 
     private static final ResourceLocation SLOT_NORMAL = ResourceLocation.fromNamespaceAndPath(
             AnalogAudio.MODID, "icons/cassette_slot");

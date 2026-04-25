@@ -198,6 +198,10 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
         guiGraphics.drawString(font, volText, this.leftPos + 149 - tw / 2, this.topPos + 29, color, false);
 
         boolean isDialHovered = this.isHovering(140, 44, 18, 18, mouseX, mouseY) || isDraggingDial;
+        if (isDialHovered) {
+            guiGraphics.renderTooltip(this.font, Component.translatable("gui.analogaudio.radio.volume"),
+                    mouseX, mouseY);
+        }
         int dialU = isDialHovered ? 19 : 0;
 
         guiGraphics.pose().pushPose();

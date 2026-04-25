@@ -65,17 +65,19 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
                     }
                 }
 
-                if (hasData) {
+                if (isEmpty) {
+                    this.level.playSound(null, this.worldPosition, ModSounds.CASSETTE_EJECT.get(),
+                            SoundSource.BLOCKS, 0.5f, 1.0f);
+                } else {
                     this.level.playSound(null, this.worldPosition, ModSounds.CASSETTE_INSERT.get(),
-                            SoundSource.BLOCKS, 1.0f, 1.0f);
+                            SoundSource.BLOCKS, 0.5f, 1.0f);
+                }
+
+                if (hasData) {
                     this.playing = true;
                     this.startTime = this.level.getGameTime();
                     this.pausedOffset = 0;
                 } else {
-                    if (isEmpty) {
-                        this.level.playSound(null, this.worldPosition, ModSounds.CASSETTE_EJECT.get(),
-                                SoundSource.BLOCKS, 1.0f, 1.0f);
-                    }
                     this.playing = false;
                     this.startTime = 0;
                     this.pausedOffset = 0;

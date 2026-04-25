@@ -8,6 +8,7 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.sounds.SoundSource;
@@ -16,17 +17,18 @@ import org.jetbrains.annotations.Nullable;
 
 import com.palm1.analogaudio.inventory.CassetteDeckMenu;
 import com.palm1.analogaudio.registry.ModBlockEntities;
+import com.palm1.analogaudio.registry.ModItems;
 import com.palm1.analogaudio.registry.ModSounds;
 
 public class CassetteDeckBlockEntity extends BlockEntity implements MenuProvider {
     public final net.minecraft.world.SimpleContainer inventory = new net.minecraft.world.SimpleContainer(1) {
         @Override
-        public boolean canPlaceItem(int index, net.minecraft.world.item.ItemStack stack) {
-            return stack.is(com.palm1.analogaudio.registry.ModItems.CASSETTE_TAPE.get());
+        public boolean canPlaceItem(int index, ItemStack stack) {
+            return stack.is(ModItems.CASSETTE_TAPE.get());
         }
     };
     private boolean wasEmpty = true;
-    private net.minecraft.world.item.ItemStack lastCassette = net.minecraft.world.item.ItemStack.EMPTY;
+    private ItemStack lastCassette = ItemStack.EMPTY;
     private long insertTime = 0;
     private long removeTime = 0;
 
@@ -36,9 +38,9 @@ public class CassetteDeckBlockEntity extends BlockEntity implements MenuProvider
         this.wasEmpty = inventory.isEmpty();
 
         inventory.addListener(container -> {
-            net.minecraft.world.item.ItemStack currentCassette = container.getItem(0);
+            ItemStack currentCassette = container.getItem(0);
             boolean isEmpty = currentCassette.isEmpty();
-            boolean itemChanged = !net.minecraft.world.item.ItemStack.matches(currentCassette, lastCassette);
+            boolean itemChanged = !ItemStack.matches(currentCassette, lastCassette);
 
             if (this.level != null && !this.level.isClientSide()) {
                 if (itemChanged) {

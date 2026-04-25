@@ -124,9 +124,13 @@ public class RadioBlock extends BaseEntityBlock {
                             double y = pos.getY() + 0.8;
                             double z = pos.getZ() + 0.5 + (lvl.random.nextDouble() - 0.5) * 0.4;
 
-                            float colorOffset = (float) (data.color() & 0xFFFFFF) / 0xFFFFFF;
-                            lvl.addParticle(ParticleTypes.NOTE, x, y, z, colorOffset, 0,
-                                    0);
+                            int r = (data.color() >> 16) & 0xFF;
+                            int g = (data.color() >> 8) & 0xFF;
+                            int b = data.color() & 0xFF;
+                            float[] hsb = java.awt.Color.RGBtoHSB(r, g, b, null);
+                            float colorOffset = (0.33f - hsb[0] + 1.0f) % 1.0f;
+
+                            lvl.addParticle(ParticleTypes.NOTE, x, y, z, colorOffset, 0, 0);
                         }
                         return;
                     }

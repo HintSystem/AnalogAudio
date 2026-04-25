@@ -26,7 +26,8 @@
   "gui.analogaudio.rotary_tuner.title": "Tuning Frequency",
   "gui.analogaudio.radio.play": "Play",
   "gui.analogaudio.radio.pause": "Pause",
-  "gui.analogaudio.radio.loop": "Toggle Loop",
+  "gui.analogaudio.radio.loop": "Loop",
+  "gui.analogaudio.radio.volume": "Adjust Volume",
   // Tooltip Translations
   "tooltip.analogaudio.walkie_talkie.frequency": "Frequency: %s",
   // Creative Category Translations
