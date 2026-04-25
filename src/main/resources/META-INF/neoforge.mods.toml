@@ -1,7 +1,7 @@
 modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
-issueTrackerURL="https://github.com/palmmc/AnalogAudio"
+issueTrackerURL="https://github.com/palmmc/AnalogAudio/issues"
 
 [[mods]]
 
