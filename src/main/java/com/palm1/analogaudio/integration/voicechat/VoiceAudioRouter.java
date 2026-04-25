@@ -147,6 +147,7 @@ public class VoiceAudioRouter {
                         serverApi.sendLocationalSoundPacketTo(targetConn, locationalPacket);
                     }
                 }
+                speaker.onVoicePacketReceived();
             });
         }
     }

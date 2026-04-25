@@ -14,9 +14,6 @@ description='''
 Bring the warm comfort of analog audio mediums to your world!
 '''
 
-[[mixins]]
-config="${mod_id}.mixins.json"
-
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"

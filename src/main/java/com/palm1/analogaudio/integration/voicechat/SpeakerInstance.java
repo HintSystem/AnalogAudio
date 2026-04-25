@@ -11,4 +11,6 @@ public interface SpeakerInstance {
     Level getLevel();
 
     Object getIdentity();
+
+    void onVoicePacketReceived();
 }

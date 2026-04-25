@@ -16,6 +16,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.HitResult;
 
+import com.palm1.analogaudio.block.SpeakerBlock;
 import com.palm1.analogaudio.client.audio.ClientAudioEngine;
 import com.palm1.analogaudio.integration.SableCompat;
 import com.palm1.analogaudio.integration.voicechat.SpeakerInstance;
@@ -25,6 +26,7 @@ import com.palm1.analogaudio.registry.ModBlockEntities;
 public class SpeakerBlockEntity extends BlockEntity implements SpeakerInstance {
     private int frequency = 1;
     private float scale = 1.0f;
+    private long lastVoiceTime = 0;
 
     public SpeakerBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.SPEAKER.get(), pos,
@@ -175,5 +177,22 @@ public class SpeakerBlockEntity extends BlockEntity implements SpeakerInstance {
     public Object getIdentity() {
         return "speaker_" + this.level.dimension().location() + "_"
                 + this.worldPosition.toShortString().replace(" ", "");
+    }
+
+    @Override
+    public void onVoicePacketReceived() {
+        if (this.level != null && !this.level.isClientSide) {
+            this.lastVoiceTime = this.level.getGameTime();
+            BlockState state = getBlockState();
+            if (state.hasProperty(SpeakerBlock.POWERED) && !state.getValue(SpeakerBlock.POWERED)) {
+                this.level.setBlock(this.worldPosition, state.setValue(SpeakerBlock.POWERED, true), 3);
+                this.level.updateNeighborsAt(this.worldPosition, state.getBlock());
+                this.level.scheduleTick(this.worldPosition, state.getBlock(), 10);
+            }
+        }
+    }
+
+    public long getLastVoiceTime() {
+        return lastVoiceTime;
     }
 }

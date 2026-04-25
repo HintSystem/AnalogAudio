@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import com.palm1.analogaudio.inventory.RadioMenu;
+import com.palm1.analogaudio.block.RadioBlock;
 import com.palm1.analogaudio.registry.ModBlockEntities;
 import com.palm1.analogaudio.registry.ModDataComponents;
 import com.palm1.analogaudio.registry.ModSounds;
@@ -80,6 +81,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
                     this.pausedOffset = 0;
                 }
                 setChanged();
+                updatePowerState();
                 updateAndSync();
             }
 
@@ -99,7 +101,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
         this.playing = playing;
         this.volume = volume;
         this.looping = looping;
-        setChanged();
+        updatePowerState();
         updateAndSync();
     }
 
@@ -109,7 +111,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
             this.startTime = this.level.getGameTime();
             this.pausedOffset = 0;
             this.playing = true;
-            setChanged();
+            updatePowerState();
             updateAndSync();
         }
         this.wasPowered = powered;
@@ -119,6 +121,20 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
         if (level != null) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
         }
+    }
+
+    private void updatePowerState() {
+        if (this.level == null || this.level.isClientSide())
+            return;
+        BlockState state = getBlockState();
+        if (state.hasProperty(RadioBlock.POWERED)) {
+            boolean wasPowered = state.getValue(RadioBlock.POWERED);
+            if (wasPowered != playing) {
+                this.level.setBlock(getBlockPos(), state.setValue(RadioBlock.POWERED, playing), 3);
+                this.level.updateNeighborsAt(worldPosition, getBlockState().getBlock());
+            }
+        }
+        setChanged();
     }
 
     @Override
