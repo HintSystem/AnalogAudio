@@ -7,13 +7,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 
 import com.palm1.analogaudio.registry.ModDataComponents;
-
-import net.minecraft.client.Minecraft;
 
 import java.util.List;
 
@@ -45,9 +42,6 @@ public class WalkieTalkieItem extends Item {
 
     private void openFrequencyScreen(ItemStack stack, InteractionHand hand) {
         int currentFreq = stack.getOrDefault(ModDataComponents.FREQUENCY.get(), 1);
-        Minecraft.getInstance().setScreen(new com.palm1.analogaudio.client.gui.RotaryTunerScreen(currentFreq, freq -> {
-            PacketDistributor
-                    .sendToServer(new com.palm1.analogaudio.network.packet.SetFrequencyC2SPacket(hand, freq));
-        }));
+        com.palm1.analogaudio.client.ClientHooks.openItemFrequencyScreen(currentFreq, hand);
     }
 }

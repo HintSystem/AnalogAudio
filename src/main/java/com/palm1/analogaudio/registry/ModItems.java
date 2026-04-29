@@ -14,6 +14,8 @@ public class ModItems {
 
         public static final DeferredItem<Item> CASSETTE_TAPE = ITEMS.register("cassette_tape",
                         () -> new CassetteTapeItem(new Item.Properties().stacksTo(1)));
+        public static final DeferredItem<Item> CASSETTE_BAG = ITEMS.register("cassette_bag",
+                        () -> new com.palm1.analogaudio.item.CassetteBagItem(new Item.Properties().stacksTo(1)));
         public static final DeferredItem<Item> WALKIE_TALKIE = ModList.get().isLoaded("voicechat")
                         ? ITEMS.register("walkie_talkie",
                                         () -> new com.palm1.analogaudio.item.WalkieTalkieItem(

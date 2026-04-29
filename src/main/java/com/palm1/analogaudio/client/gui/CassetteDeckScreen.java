@@ -28,6 +28,9 @@ import com.palm1.analogaudio.registry.ModDataComponents;
 import com.palm1.analogaudio.registry.ModItems;
 import com.palm1.analogaudio.registry.ModSounds;
 
+import com.palm1.analogaudio.util.AudioUploader;
+
+import java.io.File;
 import java.util.UUID;
 
 public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu> {
@@ -59,6 +62,13 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
             AnalogAudio.MODID, "icons/cassette_slot");
     private static final ResourceLocation SLOT_HOVER = ResourceLocation.fromNamespaceAndPath(
             AnalogAudio.MODID, "icons/cassette_slot_hover");
+
+    private static final ResourceLocation BROWSE_NORMAL = ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID,
+            "textures/gui/sprites/icons/browse.png");
+    private static final ResourceLocation BROWSE_HOVER = ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID,
+            "textures/gui/sprites/icons/browse_hover.png");
+    private static final ResourceLocation BROWSE_SELECTED = ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID,
+            "textures/gui/sprites/icons/browse_selected.png");
 
     private EditBox urlBox;
     private EditBox nameBox;
@@ -121,8 +131,9 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
             }
         };
         this.urlBox.setMaxLength(256);
-        this.urlBox.setHint(Component.literal("https://.../audio.ogg"));
+        this.urlBox.setHint(Component.literal("https://youtube.com/..."));
         this.urlBox.setBordered(false);
+        this.urlBox.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.url_disclaimer")));
         this.addRenderableWidget(this.urlBox);
 
         this.nameBox = new EditBox(this.font, this.leftPos + 10, this.topPos + 48, 97, 10,
@@ -149,6 +160,8 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
         this.nameBox.setMaxLength(32);
         this.nameBox.setHint(Component.literal("Fear's Mixtape"));
         this.nameBox.setBordered(false);
+        this.nameBox
+                .setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.name_disclaimer")));
         this.addRenderableWidget(this.nameBox);
 
         DyeColor[] orderedColors = {
@@ -179,7 +192,8 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                                 String url = oldData != null ? oldData.url() : "";
                                 String name = oldData != null ? oldData.name() : "";
                                 stack.set(ModDataComponents.CASSETTE_DATA.get(),
-                                        new CassetteData(uuid, url, name, colorVal));
+                                        new CassetteData(uuid, url, name, colorVal,
+                                                oldData != null ? oldData.volume() : 0.75f));
                             }
                         }) {
                     @Override
@@ -208,8 +222,15 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
         ImageButton writeBtn = new ImageButton(this.leftPos + 8, this.topPos + 67, 18, 18,
                 new WidgetSprites(WRITE_NORMAL, WRITE_NORMAL), button -> {
                     if (this.menu.getSlot(0).hasItem()) {
+                        String url = this.urlBox.getValue();
+                        if (validateUrl(url) == UrlValidationResult.DISALLOWED) {
+                            setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.disallowed_url"),
+                                    StatusType.ERROR, 60);
+                            return;
+                        }
+
                         PacketDistributor.sendToServer(
-                                new WriteCassetteC2SPacket(this.urlBox.getValue(), this.nameBox.getValue(),
+                                new WriteCassetteC2SPacket(url, this.nameBox.getValue(),
                                         this.selectedColor));
                         setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.writing"),
                                 StatusType.INFO, 60);
@@ -238,7 +259,9 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                 handler.play(SimpleSoundInstance.forUI(ModSounds.WRITE.get(), 1.0f));
             }
         };
-        writeBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.write")));
+        writeBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.write")
+                .append("\n§7")
+                .append(Component.translatable("gui.analogaudio.cassette_deck.write_disclaimer"))));
         this.addRenderableWidget(writeBtn);
 
         ImageButton eraseBtn = new ImageButton(this.leftPos + 26, this.topPos + 67, 18, 18,
@@ -273,8 +296,101 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                 handler.play(SimpleSoundInstance.forUI(ModSounds.ERASE.get(), 1.0f));
             }
         };
-        eraseBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.erase")));
+        eraseBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.erase")
+                .append("\n§7")
+                .append(Component.translatable("gui.analogaudio.cassette_deck.erase_disclaimer"))));
         this.addRenderableWidget(eraseBtn);
+
+        ImageButton browseBtn = new ImageButton(this.leftPos + 44, this.topPos + 67, 18, 18,
+                new WidgetSprites(BROWSE_NORMAL, BROWSE_NORMAL), button -> {
+                    org.lwjgl.PointerBuffer filters = org.lwjgl.system.MemoryUtil.memAllocPointer(1);
+                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.ogg"));
+                    filters.flip();
+
+                    String path = org.lwjgl.util.tinyfd.TinyFileDialogs.tinyfd_openFileDialog(
+                            Component.translatable("gui.analogaudio.cassette_deck.browse").getString(),
+                            "",
+                            filters,
+                            "Audio Files (*.ogg)",
+                            false);
+
+                    org.lwjgl.system.MemoryUtil.memFree(filters);
+
+                    if (path != null) {
+                        File file = new File(path);
+                        if (file.exists()) {
+                            setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.uploading"),
+                                    StatusType.INFO, 1000);
+                            AudioUploader.uploadToCatbox(file).thenAccept(url -> {
+                                this.minecraft.execute(() -> {
+                                    this.urlBox.setValue(url);
+                                    setStatus(
+                                            Component.translatable(
+                                                    "gui.analogaudio.cassette_deck.status.upload_success"),
+                                            StatusType.SUCCESS, 60);
+                                });
+                            }).exceptionally(ex -> {
+                                this.minecraft.execute(() -> {
+                                    setStatus(
+                                            Component.translatable("gui.analogaudio.cassette_deck.status.upload_fail"),
+                                            StatusType.ERROR, 60);
+                                });
+                                return null;
+                            });
+                        }
+                    }
+                }) {
+            @Override
+            public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                ResourceLocation texture = BROWSE_NORMAL;
+                if (this.isHovered()) {
+                    if (GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(),
+                            GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS) {
+                        texture = BROWSE_SELECTED;
+                    } else {
+                        texture = BROWSE_HOVER;
+                    }
+                }
+                guiGraphics.blit(texture, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width,
+                        this.height);
+            }
+        };
+
+        browseBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.browse")
+                .append("\n§7")
+                .append(Component.translatable("gui.analogaudio.cassette_deck.browse_disclaimer"))));
+        this.addRenderableWidget(browseBtn);
+    }
+
+    private enum UrlValidationResult {
+        ALLOWED,
+        DISALLOWED
+    }
+
+    private UrlValidationResult validateUrl(String url) {
+        if (url.isEmpty())
+            return UrlValidationResult.ALLOWED;
+        String lower = url.toLowerCase();
+
+        boolean match = false;
+        java.util.List<? extends String> domains = com.palm1.analogaudio.config.ModConfig.SERVER_CONFIG.whitelistedUrls
+                .get();
+        for (String domain : domains) {
+            if (lower.contains(domain.toLowerCase())) {
+                match = true;
+                break;
+            }
+        }
+
+        boolean isBlacklist = com.palm1.analogaudio.config.ModConfig.SERVER_CONFIG.whitelistAsBlacklist.get();
+        if (isBlacklist) {
+            return match ? UrlValidationResult.DISALLOWED : UrlValidationResult.ALLOWED;
+        } else {
+            if (lower.endsWith(".ogg") || lower.contains(".ogg?")) {
+                return UrlValidationResult.ALLOWED;
+            }
+            return match ? UrlValidationResult.ALLOWED : UrlValidationResult.DISALLOWED;
+        }
     }
 
     public void handleResult(int status) {

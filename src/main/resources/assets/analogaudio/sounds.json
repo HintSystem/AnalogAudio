@@ -58,5 +58,17 @@
     "sounds": [
       "analogaudio:switch_off"
     ]
+  },
+  "bag_open": {
+    "subtitle": "subtitles.analogaudio.bag_open",
+    "sounds": [
+      "analogaudio:bag_open"
+    ]
+  },
+  "bag_close": {
+    "subtitle": "subtitles.analogaudio.bag_close",
+    "sounds": [
+      "analogaudio:bag_close"
+    ]
   }
 }

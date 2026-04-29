@@ -1,6 +1,5 @@
 package com.palm1.analogaudio.block.entity;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -17,7 +16,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.HitResult;
 
 import com.palm1.analogaudio.block.SpeakerBlock;
-import com.palm1.analogaudio.client.audio.ClientAudioEngine;
+import com.palm1.analogaudio.client.ClientHooks;
 import com.palm1.analogaudio.integration.SableCompat;
 import com.palm1.analogaudio.integration.voicechat.SpeakerInstance;
 import com.palm1.analogaudio.integration.voicechat.SpeakerManager;
@@ -136,7 +135,7 @@ public class SpeakerBlockEntity extends BlockEntity implements SpeakerInstance {
         this.prevDisplayOpacity = this.displayOpacity;
         this.prevAnimationScale = this.animationScale;
 
-        float engineLoudness = ClientAudioEngine.getLoudness(getIdentity());
+        float engineLoudness = ClientHooks.getLoudness(getIdentity());
         float targetPulse = Math.max(this.scale, 1.0f + (engineLoudness * 0.15f));
 
         targetPulse = Mth.clamp(targetPulse, 1.0f, 1.15f);
@@ -150,9 +149,9 @@ public class SpeakerBlockEntity extends BlockEntity implements SpeakerInstance {
         this.scale = Mth.lerp(0.2f, this.scale, 1.0f);
 
         boolean lookingAt = false;
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.hitResult != null && mc.hitResult.getType() == HitResult.Type.BLOCK
-                && mc.hitResult instanceof BlockHitResult bhr) {
+        net.minecraft.world.phys.HitResult hitResult = com.palm1.analogaudio.client.ClientHooks.getMouseOver();
+        if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK
+                && hitResult instanceof BlockHitResult bhr) {
             BlockPos hitPos = bhr.getBlockPos();
             if (hitPos.getX() == this.worldPosition.getX() && hitPos.getY() == this.worldPosition.getY()
                     && hitPos.getZ() == this.worldPosition.getZ()) {

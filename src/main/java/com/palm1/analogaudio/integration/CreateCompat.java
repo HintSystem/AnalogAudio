@@ -1,10 +1,6 @@
 package com.palm1.analogaudio.integration;
 
-import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
-
 import net.neoforged.fml.ModList;
-
-import com.palm1.analogaudio.integration.create.RadioMovementBehaviour;
 import com.palm1.analogaudio.registry.ModBlocks;
 
 public class CreateCompat {
@@ -15,10 +11,21 @@ public class CreateCompat {
     }
 
     private static void onCommonSetup(final net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent event) {
-        event.enqueueWork(CreateCompat::registerMovementBehaviours);
-    }
+        event.enqueueWork(() -> {
+            try {
+                Class<?> movementBehaviourClass = Class
+                        .forName("com.simibubi.create.api.behaviour.movement.MovementBehaviour");
+                java.lang.reflect.Field registryField = movementBehaviourClass.getField("REGISTRY");
+                Object registry = registryField.get(null);
+                java.lang.reflect.Method registerMethod = registry.getClass().getMethod("register",
+                        net.minecraft.world.level.block.Block.class, movementBehaviourClass);
 
-    private static void registerMovementBehaviours() {
-        MovementBehaviour.REGISTRY.register(ModBlocks.RADIO.get(), new RadioMovementBehaviour());
+                Object behavior = Class.forName("com.palm1.analogaudio.integration.create.RadioMovementBehaviour")
+                        .getDeclaredConstructor().newInstance();
+                registerMethod.invoke(registry, ModBlocks.RADIO.get(), behavior);
+            } catch (Exception e) {
+                com.palm1.analogaudio.AnalogAudio.LOGGER.error("Failed to register Create movement behavior", e);
+            }
+        });
     }
 }

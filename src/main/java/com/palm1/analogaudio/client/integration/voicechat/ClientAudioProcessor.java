@@ -1,7 +1,7 @@
-package com.palm1.analogaudio.integration.voicechat;
+package com.palm1.analogaudio.client.integration.voicechat;
 
 import de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent;
-import net.minecraft.client.Minecraft;
+import com.palm1.analogaudio.client.ClientHooks;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +9,8 @@ import java.util.UUID;
 
 import com.palm1.analogaudio.block.entity.SpeakerBlockEntity;
 import com.palm1.analogaudio.client.ClientSignalTracker;
+import com.palm1.analogaudio.integration.voicechat.SpeakerInstance;
+import com.palm1.analogaudio.integration.voicechat.SpeakerManager;
 
 public class ClientAudioProcessor {
     private static final Map<UUID, ClientAudioFilter> FILTERS = new HashMap<>();
@@ -42,13 +44,20 @@ public class ClientAudioProcessor {
             ClientAudioFilter filter = FILTERS.computeIfAbsent(senderId, k -> new ClientAudioFilter());
 
             double distance = 0;
-            if (Minecraft.getInstance().player != null) {
-                distance = Minecraft.getInstance().player.position().distanceTo(signal.pos);
+            net.minecraft.world.entity.player.Player player = ClientHooks.getClientPlayer();
+            if (player != null) {
+                distance = player.position().distanceTo(signal.pos);
             }
 
             filter.apply(audio, distance, signal.frequency);
             event.setRawAudio(audio);
         } else {
         }
+    }
+
+    public static void registerEvents(de.maxhenkel.voicechat.api.events.EventRegistration registration) {
+        registration.registerEvent(ClientReceiveSoundEvent.EntitySound.class, ClientAudioProcessor::onSoundReceived);
+        registration.registerEvent(ClientReceiveSoundEvent.LocationalSound.class, ClientAudioProcessor::onSoundReceived);
+        registration.registerEvent(ClientReceiveSoundEvent.StaticSound.class, ClientAudioProcessor::onSoundReceived);
     }
 }

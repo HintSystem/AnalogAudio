@@ -26,6 +26,7 @@ public class ModCreativeTabs {
                                                         output.accept(ModItems.WALKIE_TALKIE.get());
 
                                                 output.accept(ModItems.CASSETTE_TAPE.get());
+                                                output.accept(ModItems.CASSETTE_BAG.get());
                                         })
                                         .build());
 }

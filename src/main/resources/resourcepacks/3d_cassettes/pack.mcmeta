@@ -1,6 +1,6 @@
 {
   "pack": {
-    "description": "Enables 3D item models for cassette tapes.",
+    "description": "Replaces 2D items with their 3D counterparts.",
     "pack_format": 34
   }
 }

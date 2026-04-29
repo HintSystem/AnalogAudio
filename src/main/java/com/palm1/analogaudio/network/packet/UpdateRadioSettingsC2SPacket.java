@@ -8,7 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-public record UpdateRadioSettingsC2SPacket(BlockPos pos, float volume, boolean looping, boolean playing)
+public record UpdateRadioSettingsC2SPacket(BlockPos pos, float volume, boolean looping, boolean playing, boolean shuffle)
         implements CustomPacketPayload {
     public static final Type<UpdateRadioSettingsC2SPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID, "update_radio_settings"));
@@ -19,9 +19,10 @@ public record UpdateRadioSettingsC2SPacket(BlockPos pos, float volume, boolean l
                 buf.writeFloat(val.volume());
                 buf.writeBoolean(val.looping());
                 buf.writeBoolean(val.playing());
+                buf.writeBoolean(val.shuffle());
             },
             buf -> new UpdateRadioSettingsC2SPacket(buf.readBlockPos(), buf.readFloat(), buf.readBoolean(),
-                    buf.readBoolean()));
+                    buf.readBoolean(), buf.readBoolean()));
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

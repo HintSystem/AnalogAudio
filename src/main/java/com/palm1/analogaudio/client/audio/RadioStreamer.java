@@ -1,22 +1,17 @@
 package com.palm1.analogaudio.client.audio;
 
+import com.palm1.analogaudio.client.audio.api.IRadioStreamer;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.openal.AL10;
 import org.lwjgl.openal.AL11;
 import org.lwjgl.stb.STBVorbis;
 import org.lwjgl.system.MemoryStack;
 
-import com.palm1.analogaudio.integration.SableCompat;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
-
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.nio.file.Path;
 
-public class RadioStreamer {
+public class RadioStreamer implements IRadioStreamer {
     private int sourceId = -1;
     private int bufferId = -1;
     private boolean playing = false;
@@ -28,6 +23,12 @@ public class RadioStreamer {
     private ShortBuffer pcm;
     private int sampleRate = 48000;
     private volatile boolean stopped = false;
+    private Runnable trackEndCallback;
+
+    @Override
+    public void setOnTrackEnd(Runnable callback) {
+        this.trackEndCallback = callback;
+    }
 
     public void play(Path oggFile, long startTimeTicks) {
         if (playing && oggFile.equals(currentFile) && startTimeTicks == lastStartTime)
@@ -135,6 +136,7 @@ public class RadioStreamer {
         });
     }
 
+    @Override
     public void setSettings(float volume, boolean looping) {
         this.baseVolume = volume;
         if (sourceId != -1) {
@@ -144,9 +146,10 @@ public class RadioStreamer {
         }
     }
 
-    public void updatePosition(Level level, Vec3 centerPos,
-            Player player) {
-        if (!playing || sourceId == -1 || level == null)
+    @Override
+    public void updatePosition(double x, double y, double z, double pX, double pY, double pZ, double vX, double vY,
+            double vZ) {
+        if (!playing || sourceId == -1)
             return;
 
         runOnMainThread(() -> {
@@ -161,23 +164,40 @@ public class RadioStreamer {
 
             if (state == AL10.AL_STOPPED) {
                 playing = false;
+                if (trackEndCallback != null && !stopped) {
+                    trackEndCallback.run();
+                }
                 return;
             }
 
-            Vec3 globalPos = SableCompat.getGlobalPos(level,
-                    centerPos);
-            Vec3 velocity = SableCompat.getVelocity(level,
-                    centerPos);
+            double dx = x - pX;
+            double dy = y - pY;
+            double dz = z - pZ;
+            double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-            double dist = Math.sqrt(player.distanceToSqr(globalPos.x, globalPos.y, globalPos.z));
-            float gain = (dist > 64.0) ? 0.0f : (dist > 48.0) ? (float) ((64.0 - dist) / 16.0) : 1.0f;
+            float maxDist = 64.0f;
+            float fade = 1.0f - (float) (dist / maxDist);
+            if (fade < 0)
+                fade = 0;
 
-            AL10.alSourcef(sourceId, AL10.AL_GAIN, gain * baseVolume);
-            AL10.alSource3f(sourceId, AL10.AL_POSITION, (float) globalPos.x, (float) globalPos.y, (float) globalPos.z);
-            AL10.alSource3f(sourceId, AL11.AL_VELOCITY, (float) velocity.x, (float) velocity.y, (float) velocity.z);
+            AL10.alSourcef(sourceId, AL10.AL_GAIN, fade * baseVolume);
+            AL10.alSource3f(sourceId, AL10.AL_POSITION, (float) x, (float) y, (float) z);
+            AL10.alSource3f(sourceId, AL11.AL_VELOCITY, (float) vX, (float) vY, (float) vZ);
+
+            AL10.alSourcef(sourceId, AL10.AL_ROLLOFF_FACTOR, 0.0f);
+            AL10.alSourcef(sourceId, AL10.AL_REFERENCE_DISTANCE, 0.0f);
         });
     }
 
+    @Override
+    public void start() {
+    }
+
+    @Override
+    public void playTrack(String url, long offsetMs) {
+    }
+
+    @Override
     public boolean isPlaying() {
         return playing;
     }
@@ -186,14 +206,17 @@ public class RadioStreamer {
         return currentFile;
     }
 
+    @Override
     public String getCurrentUUID() {
         return currentUUID;
     }
 
+    @Override
     public void setCurrentUUID(String uuid) {
         this.currentUUID = uuid;
     }
 
+    @Override
     public float getAmplitude() {
         if (!playing || this.pcm == null || sourceId == -1)
             return 0;
@@ -218,6 +241,7 @@ public class RadioStreamer {
         return peak;
     }
 
+    @Override
     public void stop() {
         this.playing = false;
         this.currentFile = null;

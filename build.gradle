@@ -107,6 +107,14 @@ tasks.withType(ProcessResources).configureEach {
     filesMatching(['META-INF/neoforge.mods.toml']) {
         expand replaceProperties
     }
+    
+    // Embed lavaplayer.
+    def shadowJarTask = project(':lavaplayer-impl').tasks.named('shadowJar')
+    dependsOn(shadowJarTask)
+    from(shadowJarTask.map { it.outputs.files.singleFile }) {
+        into 'assets/analogaudio/lavaplayer'
+        rename { 'lavaplayer.jar' }
+    }
 }
 
 publishing {

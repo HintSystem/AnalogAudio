@@ -2,6 +2,7 @@ package com.palm1.analogaudio.inventory;
 
 import com.palm1.analogaudio.block.entity.RadioBlockEntity;
 import com.palm1.analogaudio.registry.ModMenus;
+import com.palm1.analogaudio.registry.ModItems;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -27,7 +28,13 @@ public class RadioMenu extends AbstractContainerMenu {
         if (be instanceof RadioBlockEntity radio) {
             this.blockEntity = radio;
 
-            this.addSlot(new CassetteSlot(radio.inventory, 0, 42, 43));
+            this.addSlot(new Slot(radio.inventory, 1, 113, 45) {
+                @Override
+                public boolean mayPlace(ItemStack stack) {
+                    return stack.is(ModItems.CASSETTE_BAG.get());
+                }
+            });
+            this.addSlot(new CassetteSlot(radio.inventory, 0, 14, 29));
         } else {
             this.blockEntity = null;
         }
@@ -57,12 +64,16 @@ public class RadioMenu extends AbstractContainerMenu {
         if (slot != null && slot.hasItem()) {
             ItemStack itemstack1 = slot.getItem();
             itemstack = itemstack1.copy();
-            if (index < 1) {
-                if (!this.moveItemStackTo(itemstack1, 1, 37, true)) {
+            if (index < 2) {
+                if (!this.moveItemStackTo(itemstack1, 2, 38, true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                if (!this.moveItemStackTo(itemstack1, 0, 1, false)) {
+                if (itemstack1.is(ModItems.CASSETTE_BAG.get())) {
+                    if (!this.moveItemStackTo(itemstack1, 0, 1, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (!this.moveItemStackTo(itemstack1, 1, 2, false)) {
                     return ItemStack.EMPTY;
                 }
             }

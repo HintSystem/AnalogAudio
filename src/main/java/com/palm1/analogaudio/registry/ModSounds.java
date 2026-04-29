@@ -27,6 +27,8 @@ public class ModSounds {
                         "cassette_eject");
         public static final DeferredHolder<SoundEvent, SoundEvent> SWITCH_ON = registerSoundEvent("switch_on");
         public static final DeferredHolder<SoundEvent, SoundEvent> SWITCH_OFF = registerSoundEvent("switch_off");
+        public static final DeferredHolder<SoundEvent, SoundEvent> BAG_OPEN = registerSoundEvent("bag_open");
+        public static final DeferredHolder<SoundEvent, SoundEvent> BAG_CLOSE = registerSoundEvent("bag_close");
 
         private static DeferredHolder<SoundEvent, SoundEvent> registerSoundEvent(String name) {
                 return SOUNDS.register(name, () -> SoundEvent

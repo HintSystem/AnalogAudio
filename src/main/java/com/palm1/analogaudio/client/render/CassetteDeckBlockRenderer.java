@@ -88,7 +88,7 @@ public class CassetteDeckBlockRenderer implements BlockEntityRenderer<CassetteDe
 
         CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
 
-        if (data != null) {
+        if (data != null && ModConfig.CLIENT_CONFIG.renderCassetteText.get()) {
             String label = data.name();
             if (label.length() > 20)
                 label = label.substring(0, 17) + "...";

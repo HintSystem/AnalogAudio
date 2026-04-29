@@ -7,7 +7,6 @@ import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.VolumeCategory;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
-import de.maxhenkel.voicechat.api.events.ClientReceiveSoundEvent;
 
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 
@@ -41,10 +40,9 @@ public class AnalogAudioVoicechatPlugin implements VoicechatPlugin {
         registration.registerEvent(VoicechatServerStartedEvent.class, this::onServerStarted);
 
         // Client Events
-        registration.registerEvent(ClientReceiveSoundEvent.EntitySound.class, ClientAudioProcessor::onSoundReceived);
-        registration.registerEvent(ClientReceiveSoundEvent.LocationalSound.class,
-                ClientAudioProcessor::onSoundReceived);
-        registration.registerEvent(ClientReceiveSoundEvent.StaticSound.class, ClientAudioProcessor::onSoundReceived);
+        if (net.neoforged.fml.loading.FMLEnvironment.dist == net.neoforged.api.distmarker.Dist.CLIENT) {
+            com.palm1.analogaudio.client.integration.voicechat.ClientAudioProcessor.registerEvents(registration);
+        }
 
         AnalogAudio.LOGGER.info("Registered unified Voicechat Events.");
     }

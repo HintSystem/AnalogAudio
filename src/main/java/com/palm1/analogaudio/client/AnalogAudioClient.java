@@ -1,5 +1,6 @@
 package com.palm1.analogaudio.client;
 
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -30,13 +31,19 @@ import com.palm1.analogaudio.integration.voicechat.VoicechatClientHooks;
 import com.palm1.analogaudio.item.CassetteData;
 
 public class AnalogAudioClient {
-    public static void register(IEventBus modEventBus) {
+    public static void register(IEventBus modEventBus, net.neoforged.fml.ModContainer modContainer) {
         modEventBus.addListener(AnalogAudioClient::onRegisterMenuScreens);
         modEventBus.addListener(AnalogAudioClient::onRegisterRenderers);
         modEventBus.addListener(AnalogAudioClient::onClientSetup);
         modEventBus.addListener(AnalogAudioClient::registerItemColors);
         modEventBus.addListener(AnalogAudioClient::registerModels);
         modEventBus.addListener(AnalogAudioClient::onAddPackFinders);
+
+        modContainer.registerExtensionPoint(net.neoforged.neoforge.client.gui.IConfigScreenFactory.class,
+                (client, parent) -> new com.palm1.analogaudio.client.gui.ConfigScreen(parent));
+
+        com.palm1.analogaudio.network.AnalogAudioNetwork.writeResultHandler = com.palm1.analogaudio.client.network.ClientPacketHandlers::handleWriteResult;
+        com.palm1.analogaudio.network.AnalogAudioNetwork.radioSignalHandler = com.palm1.analogaudio.client.network.ClientPacketHandlers::handleRadioSignal;
 
         if (ModList.get().isLoaded("voicechat")) {
             modEventBus.addListener(VoicechatClientHooks::registerRenderers);
@@ -49,6 +56,7 @@ public class AnalogAudioClient {
     public static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenus.CASSETTE_DECK_MENU.get(), CassetteDeckScreen::new);
         event.register(ModMenus.RADIO_MENU.get(), RadioScreen::new);
+        event.register(ModMenus.CASSETTE_BAG_MENU.get(), com.palm1.analogaudio.client.gui.CassetteBagScreen::new);
     }
 
     @SubscribeEvent
@@ -71,6 +79,17 @@ public class AnalogAudioClient {
             }
             return -1;
         }, ModItems.CASSETTE_TAPE.get());
+
+        event.register((stack, tintIndex) -> {
+            if (tintIndex == 1) {
+                net.minecraft.world.item.component.DyedItemColor dyedColor = stack
+                        .get(net.minecraft.core.component.DataComponents.DYED_COLOR);
+                if (dyedColor != null) {
+                    return 0xFF000000 | dyedColor.rgb();
+                }
+            }
+            return -1;
+        }, ModItems.CASSETTE_BAG.get());
     }
 
     @SubscribeEvent
@@ -94,5 +113,11 @@ public class AnalogAudioClient {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            ItemProperties.register(ModItems.CASSETTE_BAG.get(),
+                    ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID, "dyed"),
+                    (stack, level, entity,
+                            seed) -> stack.has(net.minecraft.core.component.DataComponents.DYED_COLOR) ? 1.0F : 0.0F);
+        });
     }
 }

@@ -30,7 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import com.mojang.serialization.MapCodec;
 
 import com.palm1.analogaudio.block.entity.RadioBlockEntity;
-import com.palm1.analogaudio.client.audio.ClientAudioEngine;
+import com.palm1.analogaudio.client.ClientHooks;
 import com.palm1.analogaudio.item.CassetteData;
 import com.palm1.analogaudio.registry.ModBlockEntities;
 import com.palm1.analogaudio.registry.ModDataComponents;
@@ -116,8 +116,9 @@ public class RadioBlock extends BaseEntityBlock {
                 if (cassette != null && !cassette.isEmpty() && entity.getStartTime() != 0) {
                     CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
                     if (data != null) {
-                        ClientAudioEngine.tickRadio(pos, Vec3.atCenterOf(pos), data,
-                                entity.getStartTime(), entity.getVolume(), entity.isLooping());
+                        boolean shouldLoop = entity.isLooping() && !entity.isPlayingFromBag();
+                        ClientHooks.tickRadio(pos, Vec3.atCenterOf(pos), data,
+                                entity.getStartTime(), entity.getVolume(), shouldLoop);
 
                         if (lvl.getGameTime() % 10 == 0 && entity.isPlaying()) {
                             double x = pos.getX() + 0.5 + (lvl.random.nextDouble() - 0.5) * 0.4;
@@ -135,7 +136,7 @@ public class RadioBlock extends BaseEntityBlock {
                         return;
                     }
                 }
-                ClientAudioEngine.stopRadio(pos);
+                ClientHooks.stopRadio(pos);
             });
         }
         return null;
@@ -145,7 +146,7 @@ public class RadioBlock extends BaseEntityBlock {
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
             if (level.isClientSide()) {
-                ClientAudioEngine.stopRadio(pos);
+                ClientHooks.stopRadio(pos);
             }
             super.onRemove(state, level, pos, newState, isMoving);
         }

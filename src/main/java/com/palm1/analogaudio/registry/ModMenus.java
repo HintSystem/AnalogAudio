@@ -22,4 +22,10 @@ public class ModMenus {
 
         public static final Supplier<MenuType<RadioMenu>> RADIO_MENU = MENUS.register("radio_menu",
                         () -> IMenuTypeExtension.create(RadioMenu::new));
+
+        public static final Supplier<MenuType<com.palm1.analogaudio.inventory.CassetteBagMenu>> CASSETTE_BAG_MENU = MENUS
+                        .register(
+                                        "cassette_bag_menu",
+                                        () -> new MenuType<>(com.palm1.analogaudio.inventory.CassetteBagMenu::new,
+                                                        net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS));
 }

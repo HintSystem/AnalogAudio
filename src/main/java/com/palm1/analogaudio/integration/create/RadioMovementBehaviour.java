@@ -1,6 +1,6 @@
 package com.palm1.analogaudio.integration.create;
 
-import com.palm1.analogaudio.client.audio.ClientAudioEngine;
+import com.palm1.analogaudio.client.ClientHooks;
 import com.palm1.analogaudio.item.CassetteData;
 import com.palm1.analogaudio.registry.ModDataComponents;
 import com.palm1.analogaudio.registry.ModItems;
@@ -39,12 +39,12 @@ public class RadioMovementBehaviour implements MovementBehaviour {
 
             if (data != null && startTime != 0) {
                 Vec3 pos = context.position != null ? context.position : Vec3.ZERO;
-                ClientAudioEngine.tickRadio(identity, pos, data, startTime, volume, looping);
+                ClientHooks.tickRadio(identity, pos, data, startTime, volume, looping);
             } else {
-                ClientAudioEngine.stopRadio(identity);
+                ClientHooks.stopRadio(identity);
             }
         } else {
-            ClientAudioEngine.stopRadio(identity);
+            ClientHooks.stopRadio(identity);
         }
     }
 
@@ -53,8 +53,8 @@ public class RadioMovementBehaviour implements MovementBehaviour {
     public void stopMoving(MovementContext context) {
         if (context.world.isClientSide) {
             Object identity = getIdentity(context);
-            ClientAudioEngine.stopRadio(identity);
-            ClientAudioEngine.stopRadio(context.localPos);
+            ClientHooks.stopRadio(identity);
+            ClientHooks.stopRadio(context.localPos);
         }
     }
 

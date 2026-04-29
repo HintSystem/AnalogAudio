@@ -40,9 +40,13 @@ public class AnalogAudio {
         modEventBus.addListener(AnalogAudioNetwork::registerPayloads);
 
         if (net.neoforged.fml.loading.FMLEnvironment.dist == net.neoforged.api.distmarker.Dist.CLIENT) {
-            com.palm1.analogaudio.client.AnalogAudioClient.register(modEventBus);
-            modContainer.registerExtensionPoint(net.neoforged.neoforge.client.gui.IConfigScreenFactory.class,
-                    (client, parent) -> new com.palm1.analogaudio.client.gui.ConfigScreen(parent));
+            try {
+                Class.forName("com.palm1.analogaudio.client.AnalogAudioClient")
+                        .getMethod("register", IEventBus.class, net.neoforged.fml.ModContainer.class)
+                        .invoke(null, modEventBus, modContainer);
+            } catch (Exception e) {
+                LOGGER.error("Failed to register client-side components", e);
+            }
         }
     }
 

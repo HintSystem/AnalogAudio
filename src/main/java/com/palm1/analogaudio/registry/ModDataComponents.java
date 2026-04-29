@@ -26,4 +26,14 @@ public class ModDataComponents {
                                         .persistent(ExtraCodecs.intRange(1, 255))
                                         .networkSynchronized(ByteBufCodecs.VAR_INT)
                                         .build());
+
+        public static final Supplier<DataComponentType<java.util.List<net.minecraft.world.item.ItemStack>>> BAG_CONTENTS = DATA_COMPONENTS
+                        .register("bag_contents",
+                                        () -> DataComponentType.<java.util.List<net.minecraft.world.item.ItemStack>>builder()
+                                                        .persistent(net.minecraft.world.item.ItemStack.OPTIONAL_CODEC
+                                                                        .listOf())
+                                                        .networkSynchronized(
+                                                                        net.minecraft.world.item.ItemStack.OPTIONAL_STREAM_CODEC
+                                                                                        .apply(ByteBufCodecs.list()))
+                                                        .build());
 }

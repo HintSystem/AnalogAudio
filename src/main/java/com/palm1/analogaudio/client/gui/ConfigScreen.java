@@ -34,6 +34,13 @@ public class ConfigScreen extends Screen {
                     ModConfig.CLIENT_CONFIG.enableSpeakerAnimation.save();
                 }));
 
+        y += 24;
+        this.addRenderableWidget(CycleButton.onOffBuilder(ModConfig.CLIENT_CONFIG.renderCassetteText.get())
+                .create(centerX - 75, y, 150, 20, Component.literal("Cassette Text"), (button, value) -> {
+                    ModConfig.CLIENT_CONFIG.renderCassetteText.set(value);
+                    ModConfig.CLIENT_CONFIG.renderCassetteText.save();
+                }));
+
         y += 44;
         this.addRenderableWidget(CycleButton.onOffBuilder(ModConfig.SERVER_CONFIG.enableWalkieFiltering.get())
                 .create(centerX - 75, y, 150, 20, Component.literal("Walkie Filtering"), (button, value) -> {
@@ -55,7 +62,7 @@ public class ConfigScreen extends Screen {
         int y = this.height / 4 + 8;
         graphics.drawCenteredString(this.font, Component.literal("Client Settings"), this.width / 2, y, 0xAAAAAA);
 
-        graphics.drawCenteredString(this.font, Component.literal("Server Settings"), this.width / 2, y + 44,
+        graphics.drawCenteredString(this.font, Component.literal("Server Settings"), this.width / 2, y + 72,
                 0xAAAAAA);
     }
 }

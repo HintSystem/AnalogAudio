@@ -1,6 +1,5 @@
 package com.palm1.analogaudio.block;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -24,14 +23,11 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.network.PacketDistributor;
 import com.mojang.serialization.MapCodec;
 
 import org.jetbrains.annotations.Nullable;
 
 import com.palm1.analogaudio.block.entity.SpeakerBlockEntity;
-import com.palm1.analogaudio.client.gui.RotaryTunerScreen;
-import com.palm1.analogaudio.network.packet.SetFrequencyC2SPacket;
 import com.palm1.analogaudio.registry.ModBlockEntities;
 
 public class SpeakerBlock extends BaseEntityBlock {
@@ -79,11 +75,7 @@ public class SpeakerBlock extends BaseEntityBlock {
         if (level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof SpeakerBlockEntity speaker) {
-                Minecraft.getInstance().setScreen(
-                        new RotaryTunerScreen(speaker.getFrequency(), freq -> {
-                            PacketDistributor.sendToServer(
-                                    new SetFrequencyC2SPacket(pos, freq));
-                        }));
+                com.palm1.analogaudio.client.ClientHooks.openBlockFrequencyScreen(speaker.getFrequency(), pos);
             }
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide);

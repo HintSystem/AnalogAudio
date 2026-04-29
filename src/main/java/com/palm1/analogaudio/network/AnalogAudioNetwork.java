@@ -10,9 +10,11 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import java.util.UUID;
 
 import com.palm1.analogaudio.block.entity.RadioBlockEntity;
+import com.palm1.analogaudio.config.ModConfig;
 import com.palm1.analogaudio.inventory.CassetteDeckMenu;
 import com.palm1.analogaudio.item.CassetteData;
 import com.palm1.analogaudio.network.packet.EraseCassetteC2SPacket;
+import com.palm1.analogaudio.network.packet.NextTrackC2SPacket;
 import com.palm1.analogaudio.network.packet.RadioSignalS2CPacket;
 import com.palm1.analogaudio.network.packet.SetFrequencyC2SPacket;
 import com.palm1.analogaudio.network.packet.UpdateRadioSettingsC2SPacket;
@@ -21,7 +23,14 @@ import com.palm1.analogaudio.network.packet.WriteResultS2CPacket;
 import com.palm1.analogaudio.registry.ModDataComponents;
 import com.palm1.analogaudio.registry.ModItems;
 
+import java.util.function.BiConsumer;
+
 public class AnalogAudioNetwork {
+    public static BiConsumer<WriteResultS2CPacket, IPayloadContext> writeResultHandler = (d, c) -> {
+    };
+    public static BiConsumer<RadioSignalS2CPacket, IPayloadContext> radioSignalHandler = (d, c) -> {
+    };
+
     public static void registerPayloads(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar("1");
 
@@ -43,17 +52,31 @@ public class AnalogAudioNetwork {
         registrar.playToClient(
                 WriteResultS2CPacket.TYPE,
                 WriteResultS2CPacket.STREAM_CODEC,
-                ClientPacketHandlers::handleWriteResult);
+                (data, context) -> writeResultHandler.accept(data, context));
 
         registrar.playToClient(
                 RadioSignalS2CPacket.TYPE,
                 RadioSignalS2CPacket.STREAM_CODEC,
-                ClientPacketHandlers::handleRadioSignal);
+                (data, context) -> radioSignalHandler.accept(data, context));
 
         registrar.playToServer(
                 SetFrequencyC2SPacket.TYPE,
                 SetFrequencyC2SPacket.STREAM_CODEC,
                 SetFrequencyC2SPacket::handle);
+
+        registrar.playToServer(
+                NextTrackC2SPacket.TYPE,
+                NextTrackC2SPacket.STREAM_CODEC,
+                AnalogAudioNetwork::handleNextTrack);
+    }
+
+    private static void handleNextTrack(final NextTrackC2SPacket data, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            BlockEntity be = context.player().level().getBlockEntity(data.pos());
+            if (be instanceof RadioBlockEntity radio) {
+                radio.skipToNextTrack();
+            }
+        });
     }
 
     private static void handleWriteCassette(final WriteCassetteC2SPacket data, final IPayloadContext context) {
@@ -75,7 +98,8 @@ public class AnalogAudioNetwork {
                     String name = data.name().isEmpty() && oldData != null ? oldData.name() : data.name();
 
                     cassette.set(ModDataComponents.CASSETTE_DATA.get(),
-                            new CassetteData(uuid, url, name, data.color()));
+                            new CassetteData(uuid, url, name, data.color(),
+                                    oldData != null ? oldData.volume() : 0.75f));
                     deckMenu.getInventory().setChanged();
                     context.reply(new WriteResultS2CPacket(0));
                 } else {
@@ -86,7 +110,30 @@ public class AnalogAudioNetwork {
     }
 
     private static boolean isValidUrl(String url) {
-        return url.startsWith("http://") || url.startsWith("https://");
+        if (!(url.startsWith("http://") || url.startsWith("https://"))) {
+            return false;
+        }
+
+        java.util.List<? extends String> domains = ModConfig.SERVER_CONFIG.whitelistedUrls.get();
+        boolean isBlacklist = ModConfig.SERVER_CONFIG.whitelistAsBlacklist.get();
+
+        if (domains.isEmpty()) {
+            return !isBlacklist;
+        }
+
+        try {
+            String host = java.net.URI.create(url).toURL().getHost().toLowerCase();
+            boolean found = false;
+            for (String domain : domains) {
+                if (host.equals(domain.toLowerCase()) || host.endsWith("." + domain.toLowerCase())) {
+                    found = true;
+                    break;
+                }
+            }
+            return isBlacklist ? !found : found;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private static void handleEraseCassette(final EraseCassetteC2SPacket data, final IPayloadContext context) {
@@ -110,7 +157,7 @@ public class AnalogAudioNetwork {
         context.enqueueWork(() -> {
             BlockEntity be = context.player().level().getBlockEntity(data.pos());
             if (be instanceof RadioBlockEntity radio) {
-                radio.setSettings(data.volume(), data.looping(), data.playing());
+                radio.setSettings(data.volume(), data.looping(), data.playing(), data.shuffle());
             }
         });
     }

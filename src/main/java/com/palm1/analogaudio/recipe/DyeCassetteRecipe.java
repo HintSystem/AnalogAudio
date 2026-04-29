@@ -6,13 +6,17 @@ import com.palm1.analogaudio.registry.ModItems;
 import com.palm1.analogaudio.registry.ModRecipeSerializers;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.level.Level;
+import java.util.List;
+import java.util.ArrayList;
 
 public class DyeCassetteRecipe extends CustomRecipe {
 
@@ -22,14 +26,14 @@ public class DyeCassetteRecipe extends CustomRecipe {
 
     @Override
     public boolean matches(CraftingInput input, Level level) {
-        int cassettes = 0;
+        int items = 0;
         int dyes = 0;
 
         for (int i = 0; i < input.size(); ++i) {
             ItemStack stack = input.getItem(i);
             if (!stack.isEmpty()) {
-                if (stack.is(ModItems.CASSETTE_TAPE.get())) {
-                    cassettes++;
+                if (stack.is(ModItems.CASSETTE_TAPE.get()) || stack.is(ModItems.CASSETTE_BAG.get())) {
+                    items++;
                 } else if (stack.getItem() instanceof DyeItem) {
                     dyes++;
                 } else {
@@ -38,71 +42,102 @@ public class DyeCassetteRecipe extends CustomRecipe {
             }
         }
 
-        return cassettes == 1 && dyes >= 1;
+        return items == 1 && dyes >= 1;
     }
 
     @Override
     public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
-        int[] rgbSum = new int[3];
-        int maxIntensity = 0;
-        int dyeCount = 0;
-        ItemStack cassette = ItemStack.EMPTY;
+        List<DyeItem> dyes = new ArrayList<>();
+        ItemStack targetItem = ItemStack.EMPTY;
 
         for (int i = 0; i < input.size(); ++i) {
             ItemStack stack = input.getItem(i);
             if (!stack.isEmpty()) {
-                if (stack.is(ModItems.CASSETTE_TAPE.get())) {
-                    cassette = stack;
+                if (stack.is(ModItems.CASSETTE_TAPE.get()) || stack.is(ModItems.CASSETTE_BAG.get())) {
+                    targetItem = stack;
                 } else if (stack.getItem() instanceof DyeItem dyeItem) {
-                    int colorInt = dyeItem.getDyeColor().getFireworkColor();
-                    int r = (colorInt >> 16) & 255;
-                    int g = (colorInt >> 8) & 255;
-                    int b = colorInt & 255;
-                    maxIntensity += Math.max(r, Math.max(g, b));
-                    rgbSum[0] += r;
-                    rgbSum[1] += g;
-                    rgbSum[2] += b;
-                    dyeCount++;
+                    dyes.add(dyeItem);
                 }
             }
         }
 
-        if (cassette.isEmpty() || dyeCount == 0) {
+        if (targetItem.isEmpty() || dyes.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
-        CassetteData oldData = cassette.get(ModDataComponents.CASSETTE_DATA.get());
-        if (oldData != null && oldData.color() != 0xFFFFFF && oldData.color() != 0) {
-            int r = (oldData.color() >> 16) & 255;
-            int g = (oldData.color() >> 8) & 255;
-            int b = oldData.color() & 255;
+        int currentColor = -1;
+        if (targetItem.is(ModItems.CASSETTE_TAPE.get())) {
+            CassetteData data = targetItem.get(ModDataComponents.CASSETTE_DATA.get());
+            if (data != null && data.color() != 0xFFFFFF && data.color() != 0) {
+                currentColor = data.color();
+            }
+        } else {
+            DyedItemColor dyedColor = targetItem.get(DataComponents.DYED_COLOR);
+            if (dyedColor != null) {
+                currentColor = dyedColor.rgb();
+            }
+        }
+
+        int finalColor = calculateColor(currentColor, dyes);
+        ItemStack result = targetItem.copy();
+
+        if (result.is(ModItems.CASSETTE_TAPE.get())) {
+            CassetteData oldData = result.get(ModDataComponents.CASSETTE_DATA.get());
+            if (oldData != null) {
+                result.set(ModDataComponents.CASSETTE_DATA.get(),
+                        new CassetteData(oldData.uuid(), oldData.url(), oldData.name(), finalColor, oldData.volume()));
+            } else {
+                result.set(ModDataComponents.CASSETTE_DATA.get(),
+                        new CassetteData("", "", "", finalColor, 0.75f));
+            }
+        } else {
+            result.set(DataComponents.DYED_COLOR, new DyedItemColor(finalColor, true));
+        }
+
+        return result;
+    }
+
+    private int calculateColor(int currentColor, List<DyeItem> dyes) {
+        int[] rgbSum = new int[3];
+        int maxIntensity = 0;
+        int count = 0;
+
+        if (currentColor != -1) {
+            int r = (currentColor >> 16) & 255;
+            int g = (currentColor >> 8) & 255;
+            int b = currentColor & 255;
             maxIntensity += Math.max(r, Math.max(g, b));
             rgbSum[0] += r;
             rgbSum[1] += g;
             rgbSum[2] += b;
-            dyeCount++;
+            count++;
         }
 
-        int avgR = rgbSum[0] / dyeCount;
-        int avgG = rgbSum[1] / dyeCount;
-        int avgB = rgbSum[2] / dyeCount;
-        float avgIntensity = (float) maxIntensity / (float) dyeCount;
+        for (DyeItem dye : dyes) {
+            int colorInt = dye.getDyeColor().getFireworkColor();
+            int r = (colorInt >> 16) & 255;
+            int g = (colorInt >> 8) & 255;
+            int b = colorInt & 255;
+            maxIntensity += Math.max(r, Math.max(g, b));
+            rgbSum[0] += r;
+            rgbSum[1] += g;
+            rgbSum[2] += b;
+            count++;
+        }
+
+        int avgR = rgbSum[0] / count;
+        int avgG = rgbSum[1] / count;
+        int avgB = rgbSum[2] / count;
+        float avgIntensity = (float) maxIntensity / (float) count;
         float maxAvg = (float) Math.max(avgR, Math.max(avgG, avgB));
-        avgR = (int) ((float) avgR * avgIntensity / maxAvg);
-        avgG = (int) ((float) avgG * avgIntensity / maxAvg);
-        avgB = (int) ((float) avgB * avgIntensity / maxAvg);
-        int finalColor = 0xFF000000 | (avgR << 16) | (avgG << 8) | avgB;
-
-        ItemStack result = cassette.copy();
-        if (oldData != null) {
-            result.set(ModDataComponents.CASSETTE_DATA.get(),
-                    new CassetteData(oldData.uuid(), oldData.url(), oldData.name(), finalColor));
-        } else {
-            result.set(ModDataComponents.CASSETTE_DATA.get(),
-                    new CassetteData("", "", "", finalColor));
+        
+        if (maxAvg > 0) {
+            avgR = (int) ((float) avgR * avgIntensity / maxAvg);
+            avgG = (int) ((float) avgG * avgIntensity / maxAvg);
+            avgB = (int) ((float) avgB * avgIntensity / maxAvg);
         }
-
-        return result;
+        
+        return (avgR << 16) | (avgG << 8) | avgB;
     }
 
     @Override
