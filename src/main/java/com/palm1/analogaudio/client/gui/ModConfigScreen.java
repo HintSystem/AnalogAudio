@@ -2,6 +2,7 @@ package com.palm1.analogaudio.client.gui;
 
 import com.palm1.analogaudio.config.ModConfig;
 import dev.isxander.yacl3.api.*;
+import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import net.minecraft.ChatFormatting;
@@ -43,6 +44,42 @@ public class ModConfigScreen {
                                                                 .binding(true, () -> ModConfig.Client.renderCassetteText,
                                                                                 val -> ModConfig.Client.renderCassetteText = val)
                                                                 .controller(TickBoxControllerBuilder::create)
+                                                                .build())
+                                                .option(Option.<Boolean>createBuilder()
+                                                                .name(Component.translatable(
+                                                                                "config.analogaudio.enableSpatialAudio"))
+                                                                .description(OptionDescription.of(Component
+                                                                                .translatable("config.analogaudio.enableSpatialAudio.description")))
+                                                                .binding(true, () -> ModConfig.Client.enableSpatialAudio,
+                                                                                val -> ModConfig.Client.enableSpatialAudio = val)
+                                                                .controller(TickBoxControllerBuilder::create)
+                                                                .build())
+                                                .option(Option.<Float>createBuilder()
+                                                                .name(Component.translatable(
+                                                                                "config.analogaudio.spatialityThreshold"))
+                                                                .description(OptionDescription.of(Component
+                                                                                .translatable("config.analogaudio.spatialityThreshold.description")))
+                                                                .binding(0.0f, () -> ModConfig.Client.spatialityThreshold,
+                                                                                val -> ModConfig.Client.spatialityThreshold = val)
+                                                                .controller(opt -> FloatSliderControllerBuilder
+                                                                                .create(opt)
+                                                                                .range(0.0f, 1.0f)
+                                                                                .step(0.01f)
+                                                                                .formatValue(v -> Component.literal(
+                                                                                                (int) (v * 100) + "%")))
+                                                                .build())
+                                                .option(Option.<Float>createBuilder()
+                                                                .name(Component.translatable(
+                                                                                "config.analogaudio.globalRadioVolume"))
+                                                                .description(OptionDescription.of(Component
+                                                                                .translatable("config.analogaudio.globalRadioVolume.description")))
+                                                                .binding(1.0f, () -> ModConfig.Client.globalRadioVolume,
+                                                                                val -> ModConfig.Client.globalRadioVolume = val)
+                                                                .controller(opt -> FloatSliderControllerBuilder
+                                                                                .create(opt).range(0.0f, 1.0f)
+                                                                                .step(0.01f)
+                                                                                .formatValue(v -> Component.literal(
+                                                                                                (int) (v * 100) + "%")))
                                                                 .build())
                                                 .build())
                                 .category(ConfigCategory.createBuilder()
