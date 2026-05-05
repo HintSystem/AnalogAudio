@@ -1,21 +1,21 @@
 {
   "type": "minecraft:crafting_shaped",
+  "show_notification": true,
   "category": "misc",
   "key": {
-    "A": {
+    "X": {
       "item": "minecraft:leather"
     },
-    "X": {
+    "C": {
       "item": "minecraft:flint"
     }
   },
   "pattern": [
-    "AXA",
-    "A A",
-    "A A"
+    "XCX",
+    "X X"
   ],
   "result": {
-    "count": 1,
-    "item": "analogaudio:cassette_bag"
+    "id": "analogaudio:cassette_bag",
+    "count": 1
   }
 }
