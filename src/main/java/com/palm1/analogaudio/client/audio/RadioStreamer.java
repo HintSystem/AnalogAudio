@@ -125,6 +125,8 @@ public class RadioStreamer implements IRadioStreamer {
                                     "AnalogAudio: Offset {} exceeds duration {} and loop is off. Playback skipped.",
                                     offsetSeconds, durationSeconds);
                             playing = false;
+                            if (trackEndCallback != null)
+                                trackEndCallback.run();
                             return;
                         }
                         offsetSeconds %= durationSeconds;

@@ -219,7 +219,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
 
             if (hasData) {
                 loadVolumeFromCassette();
-                if (!playing) {
+                if (!playing || itemChanged) {
                     this.playing = true;
                     this.startTime = this.level.getGameTime();
                     this.pausedOffset = 0;
@@ -241,6 +241,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public void setSettings(float volume, boolean looping, boolean playing, boolean shuffle) {
+        boolean loopStarted = !this.looping && looping;
         if (this.level != null && this.playing != playing) {
             if (playing) {
                 this.startTime = this.level.getGameTime() - this.pausedOffset;
@@ -249,6 +250,15 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
         this.playing = playing;
+
+        if (loopStarted && !this.playing) {
+            this.playing = true;
+            if (this.level != null) {
+                this.startTime = this.level.getGameTime();
+            }
+            this.pausedOffset = 0;
+        }
+
         this.volume = volume;
         this.looping = looping;
         if (this.shuffle != shuffle) {
@@ -266,8 +276,23 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
     public void skipToNextTrack() {
         if (level == null || level.isClientSide())
             return;
-        if (bagStack.isEmpty() || !bagStack.is(ModItems.CASSETTE_BAG.get()))
+
+        if (bagStack.isEmpty() || !bagStack.is(ModItems.CASSETTE_BAG.get())) {
+            if (!cassetteStack.isEmpty()) {
+                if (!looping) {
+                    this.playing = false;
+                    this.startTime = 0;
+                    this.pausedOffset = 0;
+                    updatePowerState();
+                    updateAndSync();
+                } else {
+                    this.startTime = level.getGameTime();
+                    this.pausedOffset = 0;
+                    updateAndSync();
+                }
+            }
             return;
+        }
 
         List<ItemStack> contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
         if (contents == null || contents.isEmpty())
