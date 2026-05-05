@@ -47,7 +47,8 @@ jobs:
           MOD_NAME=$(grep 'mod_name=' gradle.properties | cut -d'=' -f2 | xargs)
           MODRINTH_ID=$(grep 'modrinth_id=' gradle.properties | cut -d'=' -f2 | xargs)
           GAME_VERSIONS=$(grep 'mod_game_versions=' gradle.properties | cut -d'=' -f2 | xargs)
-          DEPS=$(grep 'modrinth_dependencies=' gradle.properties | cut -d'=' -f2 | xargs)
+          DEPS_FABRIC=$(grep 'modrinth_dependencies_fabric=' gradle.properties | cut -d'=' -f2 | xargs)
+          DEPS_NEOFORGE=$(grep 'modrinth_dependencies_neoforge=' gradle.properties | cut -d'=' -f2 | xargs)
           
           if [ -z "$MODRINTH_ID" ] || [ "$MODRINTH_ID" == "null" ]; then
              echo "Modrinth ID is empty. Skipping publish."
@@ -72,12 +73,32 @@ jobs:
           }
 
           G_VERSIONS_JSON=$(echo "$GAME_VERSIONS" | tr ',' '\n' | jq -R . | jq -s -c .)
+          MOD_NAME_DASHED=$(echo $MOD_NAME | tr ' ' '-')
 
           # Find pre-downloaded JAR files
-          echo "jar=$(find build/release-artifacts -name "*.jar" | head -n 1)" >> $GITHUB_OUTPUT
+          echo "fabric_jar=$(find build/release-artifacts -name "*$MOD_NAME_DASHED*fabric.jar" | head -n 1)" >> $GITHUB_OUTPUT
+          echo "neoforge_jar=$(find build/release-artifacts -name "*$MOD_NAME_DASHED*neoforge.jar" | head -n 1)" >> $GITHUB_OUTPUT
           
           echo "game_versions=$G_VERSIONS_JSON" >> $GITHUB_OUTPUT
-          echo "deps=$(parse_deps "$DEPS")" >> $GITHUB_OUTPUT
+          echo "deps_fabric=$(parse_deps "$DEPS_FABRIC")" >> $GITHUB_OUTPUT
+          echo "deps_neoforge=$(parse_deps "$DEPS_NEOFORGE")" >> $GITHUB_OUTPUT
+
+      - name: Publish for Fabric
+        if: steps.metadata.outputs.skip != 'true'
+        uses: cloudnode-pro/modrinth-publish@v2.3.4
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          project: ${{ steps.metadata.outputs.mod_id }}
+          name: "${{ steps.metadata.outputs.mod_name }} ${{ steps.determine_type.outputs.mod_version }} for Fabric ${{ steps.determine_type.outputs.game_version }}"
+          version: ${{ github.event.release.tag_name }}
+          changelog: ${{ github.event.release.body }}
+          channel: ${{ steps.determine_type.outputs.type }}
+          status: listed
+          loaders: |-
+            fabric
+          game-versions: ${{ steps.metadata.outputs.game_versions }}
+          dependencies: ${{ steps.metadata.outputs.deps_fabric }}
+          files: ${{ steps.metadata.outputs.fabric_jar }}
 
       - name: Publish for NeoForge
         if: steps.metadata.outputs.skip != 'true'
@@ -93,8 +114,8 @@ jobs:
           loaders: |-
             neoforge
           game-versions: ${{ steps.metadata.outputs.game_versions }}
-          dependencies: ${{ steps.metadata.outputs.deps }}
-          files: ${{ steps.metadata.outputs.jar }}
+          dependencies: ${{ steps.metadata.outputs.deps_neoforge }}
+          files: ${{ steps.metadata.outputs.neoforge_jar }}
 
       - name: Send discord embed
         if: steps.metadata.outputs.skip != 'true' && success()
