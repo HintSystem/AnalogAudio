@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "analogaudio:radio",
+    "analogaudio:speaker"
+  ]
+}
