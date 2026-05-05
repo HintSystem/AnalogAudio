@@ -48,6 +48,7 @@ jobs:
             echo "version=$TARGET_TAG" >> $GITHUB_OUTPUT
             echo "mod_version=$MOD_VERSION" >> $GITHUB_OUTPUT
             echo "mod_name=$MOD_NAME" >> $GITHUB_OUTPUT
+            echo "mod_name_dashed=$(echo $MOD_NAME | tr ' ' '-')" >> $GITHUB_OUTPUT
             echo "java_version=$JAVA_VERSION" >> $GITHUB_OUTPUT
           fi
         env:
@@ -63,18 +64,11 @@ jobs:
 
       - name: Build mod
         if: steps.check_version.outputs.changed == 'true'
-        run: chmod +x gradlew && ./gradlew build
-
-      - name: Get commit message
-        if: steps.check_version.outputs.changed == 'true'
-        id: commit_message
         run: |
-          MESSAGE=$(git log -1 --pretty=%B)
-          {
-            echo "message<<EOF"
-            echo "$MESSAGE"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          chmod +x gradlew
+          ./gradlew fabric:build neoforge:build
+          # Replace spaces with dashes in all built JARs
+          find . -name "* *.jar" -type f -exec bash -c 'mv "$1" "${1// /-}"' _ {} \;
 
       - name: Draft release
         if: steps.check_version.outputs.changed == 'true'
@@ -84,7 +78,9 @@ jobs:
           target_commitish: ${{ github.ref_name }}
           tag_name: ${{ steps.check_version.outputs.version }}
           name: "${{ steps.check_version.outputs.mod_name }} ${{ steps.check_version.outputs.mod_version }}"
-          body: ${{ steps.commit_message.outputs.message }}
-          files: build/libs/*.jar
+          body: "Minor fixes."
+          files: |
+            fabric/build/libs/${{ steps.check_version.outputs.mod_name_dashed }}-*-fabric.jar
+            neoforge/build/libs/${{ steps.check_version.outputs.mod_name_dashed }}-*-neoforge.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
