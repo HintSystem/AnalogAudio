@@ -1,5 +1,6 @@
 package com.palm1.analogaudio.client.audio;
 
+import com.palm1.analogaudio.AnalogAudio;
 import com.palm1.analogaudio.client.audio.api.IRadioStreamer;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.openal.AL10;
@@ -15,6 +16,7 @@ public class RadioStreamer implements IRadioStreamer {
     private int sourceId = -1;
     private int bufferId = -1;
     private boolean playing = false;
+    private boolean looping = false;
     private float baseVolume = 1.0f;
     private long lastStartTime = 0;
     private Path currentFile = null;
@@ -64,14 +66,14 @@ public class RadioStreamer implements IRadioStreamer {
 
             try (MemoryStack stack = MemoryStack.stackPush()) {
                 if (bufferId == -1) {
-                    com.palm1.analogaudio.AnalogAudio.LOGGER.info("Decoding OGG: {}", oggFile);
+                    AnalogAudio.LOGGER.info("Decoding OGG: {}", oggFile);
                     IntBuffer channels = stack.mallocInt(1);
                     IntBuffer sampleRate = stack.mallocInt(1);
 
                     ShortBuffer decodedPcm = STBVorbis.stb_vorbis_decode_filename(oggFile.toString(), channels,
                             sampleRate);
                     if (decodedPcm == null) {
-                        com.palm1.analogaudio.AnalogAudio.LOGGER.error("Failed to decode: {}", oggFile);
+                        AnalogAudio.LOGGER.error("Failed to decode: {}", oggFile);
                         return;
                     }
 
@@ -109,7 +111,7 @@ public class RadioStreamer implements IRadioStreamer {
                     float currentTicks = Minecraft.getInstance().level.getGameTime();
                     float offsetSeconds = (currentTicks - startTimeTicks) / 20.0f;
 
-                    com.palm1.analogaudio.AnalogAudio.LOGGER.info(
+                    AnalogAudio.LOGGER.info(
                             "AnalogAudio: Streamer Play requested. currentTicks: {}, startTimeTicks: {}, rawOffset: {}",
                             currentTicks, startTimeTicks, offsetSeconds);
 
@@ -118,6 +120,13 @@ public class RadioStreamer implements IRadioStreamer {
                     }
 
                     if (durationSeconds > 0) {
+                        if (!looping && offsetSeconds > durationSeconds) {
+                            AnalogAudio.LOGGER.info(
+                                    "AnalogAudio: Offset {} exceeds duration {} and loop is off. Playback skipped.",
+                                    offsetSeconds, durationSeconds);
+                            playing = false;
+                            return;
+                        }
                         offsetSeconds %= durationSeconds;
                         if (offsetSeconds < 0)
                             offsetSeconds += durationSeconds;
@@ -139,6 +148,7 @@ public class RadioStreamer implements IRadioStreamer {
     @Override
     public void setSettings(float volume, boolean looping) {
         this.baseVolume = volume;
+        this.looping = looping;
         if (sourceId != -1) {
             Minecraft.getInstance().execute(() -> {
                 AL10.alSourcei(sourceId, AL10.AL_LOOPING, looping ? AL10.AL_TRUE : AL10.AL_FALSE);

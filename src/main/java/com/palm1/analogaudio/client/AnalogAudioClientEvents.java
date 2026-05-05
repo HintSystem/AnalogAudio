@@ -18,13 +18,20 @@ public class AnalogAudioClientEvents {
 
     @SubscribeEvent
     public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
-        ClientAudioEngine.stopAll("LOGOUT");
+        ClientAudioEngine.stopAll("LOGOUT", true);
     }
 
     @SubscribeEvent
     public static void onLevelUnload(LevelEvent.Unload event) {
         if (event.getLevel().isClientSide()) {
-            ClientAudioEngine.stopAll("LEVEL_UNLOAD");
+            ClientAudioEngine.stopAll("LEVEL_UNLOAD", false);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLevelLoad(LevelEvent.Load event) {
+        if (event.getLevel().isClientSide()) {
+            ClientAudioEngine.prepareForSession();
         }
     }
 }
