@@ -3,6 +3,7 @@ package com.palm1.analogaudio.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -147,6 +148,12 @@ public class RadioBlock extends BaseEntityBlock {
         if (!state.is(newState.getBlock())) {
             if (level.isClientSide()) {
                 ClientHooks.stopRadio(pos);
+            } else {
+                BlockEntity blockEntity = level.getBlockEntity(pos);
+                if (blockEntity instanceof RadioBlockEntity radio) {
+                    Containers.dropContents(level, pos, radio.inventory);
+                    level.updateNeighbourForOutputSignal(pos, this);
+                }
             }
             super.onRemove(state, level, pos, newState, isMoving);
         }
