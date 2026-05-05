@@ -143,9 +143,11 @@ public class ClientAudioEngine {
         FAILED.remove(identity);
     }
 
-    public static void stopAll(String trigger) {
-        active = false;
-        AnalogAudio.LOGGER.info("Force-stop triggered by {}. Active streams: {}", trigger, PLAYING.size());
+    public static void stopAll(String trigger, boolean deactivate) {
+        if (deactivate)
+            active = false;
+        AnalogAudio.LOGGER.info("Force-stop triggered by {}. Deactivated: {}. Active streams: {}", trigger, deactivate,
+                PLAYING.size());
         for (Object identity : PLAYING.keySet()) {
             AnalogAudio.LOGGER.info("Stopping and clearing identity {}", identity);
             stopRadio(identity);
