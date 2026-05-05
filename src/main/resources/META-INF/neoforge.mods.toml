@@ -29,8 +29,29 @@ Bring the warm comfort of analog audio mediums to your world!
     side="BOTH"
 
 [[dependencies.${mod_id}]]
+    modId="sable"
+    type="optional"
+    versionRange="[1.0.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="simulated"
+    type="optional"
+    versionRange="[1.0.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
     modId="voicechat"
     type="optional"
     versionRange="[1.21.1-2.6.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="create"
+    type="optional"
+    versionRange="[0.6.0,)"
     ordering="AFTER"
     side="BOTH"
