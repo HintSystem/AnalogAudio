@@ -36,6 +36,7 @@ public class ClientAudioEngine {
     private static final Set<Object> FAILED = Collections
             .newSetFromMap(new ConcurrentHashMap<>());
     private static final Map<Object, Long> LAST_TICKED = new ConcurrentHashMap<>();
+    private static final Map<Object, Long> LAST_START_TIMES = new ConcurrentHashMap<>();
     private static volatile boolean active = true;
 
     static {
@@ -67,8 +68,10 @@ public class ClientAudioEngine {
         LAST_TICKED.put(identity, System.currentTimeMillis());
 
         IRadioStreamer streamer = PLAYING.get(identity);
+        Long lastStartTime = LAST_START_TIMES.get(identity);
+        boolean timeChanged = lastStartTime != null && lastStartTime != startTime;
 
-        if (streamer == null || !data.uuid().equals(streamer.getCurrentUUID())) {
+        if (streamer == null || !data.uuid().equals(streamer.getCurrentUUID()) || timeChanged) {
             if (streamer != null) {
                 streamer.stop();
                 PLAYING.remove(identity);
@@ -112,6 +115,7 @@ public class ClientAudioEngine {
                 }
             }
         }
+        LAST_START_TIMES.put(identity, startTime);
 
         if (Minecraft.getInstance().player != null) {
             streamer.setSettings(volume, looping);

@@ -174,6 +174,8 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
                     if (duration > 0) {
                         if (!looping && offsetMs > duration) {
                             playing = false;
+                            if (trackEndCallback != null)
+                                trackEndCallback.run();
                             return;
                         }
                         track.setPosition(offsetMs % duration);
@@ -193,6 +195,8 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
                         if (duration > 0) {
                             if (!looping && offsetMs > duration) {
                                 playing = false;
+                                if (trackEndCallback != null)
+                                    trackEndCallback.run();
                                 return;
                             }
                             track.setPosition(offsetMs % duration);
