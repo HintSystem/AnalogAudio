@@ -82,7 +82,7 @@ public class VoiceAudioRouter {
                 VoicechatApiHandle.ifServerPresent(serverApi -> {
                     VoicechatConnection recipientConn = serverApi.getConnectionOf(recipient.getUUID());
                     if (recipientConn != null) {
-                        if (ModConfig.SERVER_CONFIG.enableWalkieFiltering.get()) {
+                        if (ModConfig.Server.enableWalkieFiltering) {
                             PacketDistributor.sendToPlayer(recipient,
                                     new RadioSignalS2CPacket(
                                             channelId, actualPlayer.position(), activeFrequency, false));
@@ -136,7 +136,7 @@ public class VoiceAudioRouter {
 
                     VoicechatConnection targetConn = serverApi.getConnectionOf(recipient.getUUID());
                     if (targetConn != null) {
-                        if (ModConfig.SERVER_CONFIG.enableWalkieFiltering.get()) {
+                        if (ModConfig.Server.enableWalkieFiltering) {
                             PacketDistributor.sendToPlayer(recipient,
                                     new RadioSignalS2CPacket(
                                             sessionChannelId, new Vec3(speakerPos.x(),

@@ -17,18 +17,29 @@ import com.palm1.analogaudio.network.packet.EraseCassetteC2SPacket;
 import com.palm1.analogaudio.network.packet.NextTrackC2SPacket;
 import com.palm1.analogaudio.network.packet.RadioSignalS2CPacket;
 import com.palm1.analogaudio.network.packet.SetFrequencyC2SPacket;
+import com.palm1.analogaudio.network.packet.SyncConfigS2CPacket;
 import com.palm1.analogaudio.network.packet.UpdateRadioSettingsC2SPacket;
 import com.palm1.analogaudio.network.packet.WriteCassetteC2SPacket;
 import com.palm1.analogaudio.network.packet.WriteResultS2CPacket;
 import com.palm1.analogaudio.registry.ModDataComponents;
 import com.palm1.analogaudio.registry.ModItems;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.fml.common.EventBusSubscriber;
 
+import com.palm1.analogaudio.util.AudioUploader;
 import java.util.function.BiConsumer;
 
+@EventBusSubscriber(modid = "analogaudio", bus = EventBusSubscriber.Bus.GAME)
 public class AnalogAudioNetwork {
     public static BiConsumer<WriteResultS2CPacket, IPayloadContext> writeResultHandler = (d, c) -> {
     };
     public static BiConsumer<RadioSignalS2CPacket, IPayloadContext> radioSignalHandler = (d, c) -> {
+    };
+    public static BiConsumer<SyncConfigS2CPacket, IPayloadContext> syncConfigHandler = (d, c) -> {
+        ModConfig.Synced.set(d.whitelistedUrls(), d.whitelistAsBlacklist(), d.enableWalkieFiltering(),
+                d.allowFileUploads());
     };
 
     public static void registerPayloads(final RegisterPayloadHandlersEvent event) {
@@ -68,6 +79,22 @@ public class AnalogAudioNetwork {
                 NextTrackC2SPacket.TYPE,
                 NextTrackC2SPacket.STREAM_CODEC,
                 AnalogAudioNetwork::handleNextTrack);
+
+        registrar.playToClient(
+                SyncConfigS2CPacket.TYPE,
+                SyncConfigS2CPacket.STREAM_CODEC,
+                (data, context) -> syncConfigHandler.accept(data, context));
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            PacketDistributor.sendToPlayer(serverPlayer, new SyncConfigS2CPacket(
+                    ModConfig.Server.whitelistedUrls,
+                    ModConfig.Server.whitelistAsBlacklist,
+                    ModConfig.Server.enableWalkieFiltering,
+                    ModConfig.Server.allowFileUploads));
+        }
     }
 
     private static void handleNextTrack(final NextTrackC2SPacket data, final IPayloadContext context) {
@@ -114,15 +141,21 @@ public class AnalogAudioNetwork {
             return false;
         }
 
-        java.util.List<? extends String> domains = ModConfig.SERVER_CONFIG.whitelistedUrls.get();
-        boolean isBlacklist = ModConfig.SERVER_CONFIG.whitelistAsBlacklist.get();
-
-        if (domains.isEmpty()) {
-            return !isBlacklist;
-        }
-
         try {
             String host = java.net.URI.create(url).toURL().getHost().toLowerCase();
+
+            if (ModConfig.Server.allowFileUploads
+                    && (host.equals(AudioUploader.FILE_HOST_URL) || host.endsWith("." + AudioUploader.FILE_HOST_URL))) {
+                return true;
+            }
+
+            java.util.List<String> domains = ModConfig.Server.whitelistedUrls;
+            boolean isBlacklist = ModConfig.Server.whitelistAsBlacklist;
+
+            if (domains.isEmpty()) {
+                return !isBlacklist;
+            }
+
             boolean found = false;
             for (String domain : domains) {
                 if (host.equals(domain.toLowerCase()) || host.endsWith("." + domain.toLowerCase())) {

@@ -156,11 +156,11 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
                     if (lastCassette.isEmpty() && !currentCassette.isEmpty()) {
                         this.insertTime = this.level.getGameTime();
                         this.level.playSound(null, this.worldPosition, ModSounds.CASSETTE_INSERT.get(),
-                                SoundSource.BLOCKS, 0.5f, 1.0f);
+                                SoundSource.BLOCKS, 1.0f, 1.0f);
                     } else if (!lastCassette.isEmpty() && currentCassette.isEmpty()) {
                         this.removeTime = this.level.getGameTime();
                         this.level.playSound(null, this.worldPosition, ModSounds.CASSETTE_EJECT.get(),
-                                SoundSource.BLOCKS, 0.5f, 1.0f);
+                                SoundSource.BLOCKS, 1.0f, 1.0f);
                     }
                 }
 

@@ -11,12 +11,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class AudioUploader {
-    private static final String CATBOX_API = "https://catbox.moe/user/api.php";
+    public static final String FILE_HOST_URL = "catbox.moe";
+    private static final String CATBOX_API = "https://" + FILE_HOST_URL + "/user/api.php";
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .build();
 
-    // Uses catbox.moe to host locally uploaded audio
     public static CompletableFuture<String> uploadToCatbox(File file) {
         String boundary = "Boundary-" + UUID.randomUUID().toString();
 

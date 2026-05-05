@@ -41,7 +41,7 @@ public class SpeakerBlockRenderer implements BlockEntityRenderer<SpeakerBlockEnt
 
                 globalPos = BlockPos.containing(globalVec);
                 float currentScale = 1.0f;
-                if (ModConfig.CLIENT_CONFIG.enableSpeakerAnimation.get()) {
+                if (ModConfig.Client.enableSpeakerAnimation) {
                         currentScale = blockEntity.updateAndGetAnimationScale(globalTime, partialTick, 1.0f);
                 }
                 ModRenderUtils.renderBlockModel(blockEntity, state, currentScale, poseStack, bufferSource,
