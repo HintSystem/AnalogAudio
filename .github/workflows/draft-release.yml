@@ -1,0 +1,90 @@
+name: Draft Release
+
+on:
+  push:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  draft:
+    name: Check version and draft release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for existing version.
+        id: check_version
+        run: |
+          # Read project properties
+          MOD_NAME=$(grep 'mod_name=' gradle.properties | cut -d'=' -f2 | xargs)
+          MOD_VERSION=$(grep 'mod_version=' gradle.properties | cut -d'=' -f2 | xargs)
+          GAME_VERSIONS=$(grep 'mod_game_versions=' gradle.properties | cut -d'=' -f2 | xargs)
+          MODRINTH_ID=$(grep 'modrinth_id=' gradle.properties | cut -d'=' -f2 | xargs)
+          JAVA_VERSION=$(grep 'java_version=' gradle.properties | cut -d'=' -f2 | xargs)
+          
+          if [ -z "$MODRINTH_ID" ] || [ "$MODRINTH_ID" == "null" ]; then
+            echo "Modrinth ID is empty. Skipping release tasks."
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Get the primary version
+          MAIN_GAME_VERSION=$(echo $GAME_VERSIONS | cut -d',' -f1)
+          TARGET_TAG="${MOD_VERSION}+${MAIN_GAME_VERSION}"
+          
+          if gh release view "$TARGET_TAG" > /dev/null 2>&1; then
+             echo "Found existing release on GitHub for $TARGET_TAG. Skipping."
+             echo "changed=false" >> $GITHUB_OUTPUT
+             exit 0
+          else
+            echo "Version $TARGET_TAG not found on GitHub. Proceeding!"
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "version=$TARGET_TAG" >> $GITHUB_OUTPUT
+            echo "mod_version=$MOD_VERSION" >> $GITHUB_OUTPUT
+            echo "mod_name=$MOD_NAME" >> $GITHUB_OUTPUT
+            echo "java_version=$JAVA_VERSION" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Java
+        if: steps.check_version.outputs.changed == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ steps.check_version.outputs.java_version }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Build mod
+        if: steps.check_version.outputs.changed == 'true'
+        run: chmod +x gradlew && ./gradlew build
+
+      - name: Get commit message
+        if: steps.check_version.outputs.changed == 'true'
+        id: commit_message
+        run: |
+          MESSAGE=$(git log -1 --pretty=%B)
+          {
+            echo "message<<EOF"
+            echo "$MESSAGE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Draft release
+        if: steps.check_version.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          target_commitish: ${{ github.ref_name }}
+          tag_name: ${{ steps.check_version.outputs.version }}
+          name: "${{ steps.check_version.outputs.mod_name }} ${{ steps.check_version.outputs.mod_version }}"
+          body: ${{ steps.commit_message.outputs.message }}
+          files: build/libs/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

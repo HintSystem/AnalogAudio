@@ -1,0 +1,106 @@
+name: Publish to Modrinth
+
+on:
+  release:
+    types: [ published ]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish to Modrinth
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.target_commitish || github.event.release.tag_name }}
+
+      - name: Determine release type
+        id: determine_type
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          if [[ "$TAG" == *"alpha"* ]]; then
+            echo "type=alpha" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == *"beta"* ]]; then
+            echo "type=beta" >> $GITHUB_OUTPUT
+          else
+            echo "type=release" >> $GITHUB_OUTPUT
+          fi
+          
+          # Split version and game version from tag
+          TAG="${{ github.event.release.tag_name }}"
+          echo "mod_version=$(echo $TAG | cut -d'+' -f1)" >> $GITHUB_OUTPUT
+          echo "game_version=$(echo $TAG | cut -d'+' -f2)" >> $GITHUB_OUTPUT
+
+      - name: Download release jars
+        run: |
+          mkdir -p build/release-artifacts
+          gh release download ${{ github.event.release.tag_name }} --pattern "*.jar" --dir build/release-artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read metadata
+        id: metadata
+        run: |
+          MOD_NAME=$(grep 'mod_name=' gradle.properties | cut -d'=' -f2 | xargs)
+          MODRINTH_ID=$(grep 'modrinth_id=' gradle.properties | cut -d'=' -f2 | xargs)
+          GAME_VERSIONS=$(grep 'mod_game_versions=' gradle.properties | cut -d'=' -f2 | xargs)
+          DEPS=$(grep 'modrinth_dependencies=' gradle.properties | cut -d'=' -f2 | xargs)
+          
+          if [ -z "$MODRINTH_ID" ] || [ "$MODRINTH_ID" == "null" ]; then
+             echo "Modrinth ID is empty. Skipping publish."
+             echo "skip=true" >> $GITHUB_OUTPUT
+             exit 0
+          fi
+          
+          echo "mod_name=$MOD_NAME" >> $GITHUB_OUTPUT
+          echo "mod_id=$MODRINTH_ID" >> $GITHUB_OUTPUT
+          
+          parse_deps() {
+            local input=$1
+            if [ -z "$input" ]; then
+              echo "[]"
+            else
+              echo "$input" | tr ',' '\n' | while read -r dep; do
+                id=$(echo "$dep" | cut -d'(' -f1 | xargs)
+                type=$(echo "$dep" | cut -d'(' -f2 | tr -d ')' | xargs)
+                echo "{\"project_id\":\"$id\",\"dependency_type\":\"$type\"}"
+              done | jq -s -c .
+            fi
+          }
+
+          G_VERSIONS_JSON=$(echo "$GAME_VERSIONS" | tr ',' '\n' | jq -R . | jq -s -c .)
+
+          # Find pre-downloaded JAR files
+          echo "jar=$(find build/release-artifacts -name "*.jar" | head -n 1)" >> $GITHUB_OUTPUT
+          
+          echo "game_versions=$G_VERSIONS_JSON" >> $GITHUB_OUTPUT
+          echo "deps=$(parse_deps "$DEPS")" >> $GITHUB_OUTPUT
+
+      - name: Publish for NeoForge
+        if: steps.metadata.outputs.skip != 'true'
+        uses: cloudnode-pro/modrinth-publish@v2.3.4
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          project: ${{ steps.metadata.outputs.mod_id }}
+          name: "${{ steps.metadata.outputs.mod_name }} ${{ steps.determine_type.outputs.mod_version }} for NeoForge ${{ steps.determine_type.outputs.game_version }}"
+          version: ${{ github.event.release.tag_name }}
+          changelog: ${{ github.event.release.body }}
+          channel: ${{ steps.determine_type.outputs.type }}
+          status: listed
+          loaders: |-
+            neoforge
+          game-versions: ${{ steps.metadata.outputs.game_versions }}
+          dependencies: ${{ steps.metadata.outputs.deps }}
+          files: ${{ steps.metadata.outputs.jar }}
+
+      - name: Send discord embed
+        if: steps.metadata.outputs.skip != 'true' && success()
+        run: |
+          chmod +x .github/scripts/discord.py
+          ./.github/scripts/discord.py \
+            "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            "${{ steps.metadata.outputs.mod_id }}" \
+            "${{ github.event.release.tag_name }}"
