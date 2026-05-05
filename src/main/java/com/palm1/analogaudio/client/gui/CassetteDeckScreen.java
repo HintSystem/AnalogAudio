@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -20,6 +21,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import com.palm1.analogaudio.AnalogAudio;
+import com.palm1.analogaudio.config.ModConfig;
+import com.palm1.analogaudio.util.AudioUploader;
 import com.palm1.analogaudio.item.CassetteData;
 import com.palm1.analogaudio.inventory.CassetteDeckMenu;
 import com.palm1.analogaudio.network.packet.EraseCassetteC2SPacket;
@@ -27,8 +30,6 @@ import com.palm1.analogaudio.network.packet.WriteCassetteC2SPacket;
 import com.palm1.analogaudio.registry.ModDataComponents;
 import com.palm1.analogaudio.registry.ModItems;
 import com.palm1.analogaudio.registry.ModSounds;
-
-import com.palm1.analogaudio.util.AudioUploader;
 
 import java.io.File;
 import java.util.UUID;
@@ -343,7 +344,7 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
             @Override
             public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
                 ResourceLocation texture = BROWSE_NORMAL;
-                if (this.isHovered()) {
+                if (this.active && this.isHovered()) {
                     if (GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(),
                             GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS) {
                         texture = BROWSE_SELECTED;
@@ -351,14 +352,27 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                         texture = BROWSE_HOVER;
                     }
                 }
+                if (!this.active) {
+                    guiGraphics.setColor(0.5f, 0.5f, 0.5f, 1.0f);
+                }
                 guiGraphics.blit(texture, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width,
                         this.height);
+                guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
             }
         };
 
-        browseBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.browse")
-                .append("\n§7")
-                .append(Component.translatable("gui.analogaudio.cassette_deck.browse_disclaimer"))));
+        boolean fileUploads = ModConfig.Synced.allowFileUploads;
+        browseBtn.active = fileUploads;
+        if (fileUploads) {
+            browseBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.browse")
+                    .append("\n§7")
+                    .append(Component.translatable("gui.analogaudio.cassette_deck.browse_disclaimer",
+                            Component.literal(AudioUploader.FILE_HOST_URL).withStyle(ChatFormatting.RED)))));
+        } else {
+            browseBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.browse")
+                    .append("\n§c")
+                    .append(Component.translatable("gui.analogaudio.cassette_deck.browse_disabled"))));
+        }
         this.addRenderableWidget(browseBtn);
     }
 
@@ -372,9 +386,12 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
             return UrlValidationResult.ALLOWED;
         String lower = url.toLowerCase();
 
+        if (ModConfig.Synced.allowFileUploads && lower.contains(AudioUploader.FILE_HOST_URL.toLowerCase())) {
+            return UrlValidationResult.ALLOWED;
+        }
+
         boolean match = false;
-        java.util.List<? extends String> domains = com.palm1.analogaudio.config.ModConfig.SERVER_CONFIG.whitelistedUrls
-                .get();
+        java.util.List<String> domains = ModConfig.Synced.whitelistedUrls;
         for (String domain : domains) {
             if (lower.contains(domain.toLowerCase())) {
                 match = true;
@@ -382,7 +399,7 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
             }
         }
 
-        boolean isBlacklist = com.palm1.analogaudio.config.ModConfig.SERVER_CONFIG.whitelistAsBlacklist.get();
+        boolean isBlacklist = ModConfig.Synced.whitelistAsBlacklist;
         if (isBlacklist) {
             return match ? UrlValidationResult.DISALLOWED : UrlValidationResult.ALLOWED;
         } else {

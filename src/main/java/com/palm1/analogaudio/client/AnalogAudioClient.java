@@ -2,11 +2,13 @@ package com.palm1.analogaudio.client;
 
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.repository.Pack.Position;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
@@ -16,10 +18,14 @@ import net.neoforged.fml.ModList;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 import com.palm1.analogaudio.AnalogAudio;
+import com.palm1.analogaudio.client.gui.CassetteBagScreen;
 import com.palm1.analogaudio.client.gui.CassetteDeckScreen;
+import com.palm1.analogaudio.client.gui.ModConfigScreen;
 import com.palm1.analogaudio.client.gui.RadioScreen;
+import com.palm1.analogaudio.client.network.ClientPacketHandlers;
 import com.palm1.analogaudio.registry.ModBlockEntities;
 import com.palm1.analogaudio.registry.ModDataComponents;
 import com.palm1.analogaudio.registry.ModItems;
@@ -29,6 +35,7 @@ import com.palm1.analogaudio.client.render.CassetteDeckBlockRenderer;
 import com.palm1.analogaudio.client.render.SpeakerBlockRenderer;
 import com.palm1.analogaudio.integration.voicechat.VoicechatClientHooks;
 import com.palm1.analogaudio.item.CassetteData;
+import com.palm1.analogaudio.network.AnalogAudioNetwork;
 
 public class AnalogAudioClient {
     public static void register(IEventBus modEventBus, net.neoforged.fml.ModContainer modContainer) {
@@ -39,11 +46,11 @@ public class AnalogAudioClient {
         modEventBus.addListener(AnalogAudioClient::registerModels);
         modEventBus.addListener(AnalogAudioClient::onAddPackFinders);
 
-        modContainer.registerExtensionPoint(net.neoforged.neoforge.client.gui.IConfigScreenFactory.class,
-                (client, parent) -> new com.palm1.analogaudio.client.gui.ConfigScreen(parent));
+        modContainer.registerExtensionPoint(IConfigScreenFactory.class,
+                (client, parent) -> ModConfigScreen.create(parent));
 
-        com.palm1.analogaudio.network.AnalogAudioNetwork.writeResultHandler = com.palm1.analogaudio.client.network.ClientPacketHandlers::handleWriteResult;
-        com.palm1.analogaudio.network.AnalogAudioNetwork.radioSignalHandler = com.palm1.analogaudio.client.network.ClientPacketHandlers::handleRadioSignal;
+        AnalogAudioNetwork.writeResultHandler = ClientPacketHandlers::handleWriteResult;
+        AnalogAudioNetwork.radioSignalHandler = ClientPacketHandlers::handleRadioSignal;
 
         if (ModList.get().isLoaded("voicechat")) {
             modEventBus.addListener(VoicechatClientHooks::registerRenderers);
@@ -56,7 +63,7 @@ public class AnalogAudioClient {
     public static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenus.CASSETTE_DECK_MENU.get(), CassetteDeckScreen::new);
         event.register(ModMenus.RADIO_MENU.get(), RadioScreen::new);
-        event.register(ModMenus.CASSETTE_BAG_MENU.get(), com.palm1.analogaudio.client.gui.CassetteBagScreen::new);
+        event.register(ModMenus.CASSETTE_BAG_MENU.get(), CassetteBagScreen::new);
     }
 
     @SubscribeEvent
@@ -82,8 +89,8 @@ public class AnalogAudioClient {
 
         event.register((stack, tintIndex) -> {
             if (tintIndex == 1) {
-                net.minecraft.world.item.component.DyedItemColor dyedColor = stack
-                        .get(net.minecraft.core.component.DataComponents.DYED_COLOR);
+                DyedItemColor dyedColor = stack
+                        .get(DataComponents.DYED_COLOR);
                 if (dyedColor != null) {
                     return 0xFF000000 | dyedColor.rgb();
                 }
@@ -117,7 +124,7 @@ public class AnalogAudioClient {
             ItemProperties.register(ModItems.CASSETTE_BAG.get(),
                     ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID, "dyed"),
                     (stack, level, entity,
-                            seed) -> stack.has(net.minecraft.core.component.DataComponents.DYED_COLOR) ? 1.0F : 0.0F);
+                            seed) -> stack.has(DataComponents.DYED_COLOR) ? 1.0F : 0.0F);
         });
     }
 }

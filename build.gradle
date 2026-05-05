@@ -39,6 +39,10 @@ repositories {
     maven {
         url "https://api.modrinth.com/maven"
     }
+    maven {
+        name 'Xander Maven'
+        url 'https://maven.isxander.dev/releases'
+    }
 }
 
 base {
@@ -90,6 +94,9 @@ dependencies {
     compileOnly("dev.simulated_team.simulated:simulated-neoforge-1.21.1:1.0.3") {
         transitive = false
     }
+
+    implementation "dev.isxander:yet-another-config-lib:${yacl_version}-neoforge"
+    jarJar "dev.isxander:yet-another-config-lib:${yacl_version}-neoforge"
 }
 
 tasks.withType(ProcessResources).configureEach {

@@ -18,10 +18,7 @@ public class AnalogAudio {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public AnalogAudio(IEventBus modEventBus, ModContainer modContainer) {
-        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER,
-                ModConfig.SERVER_SPEC);
-        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.CLIENT,
-                ModConfig.CLIENT_SPEC);
+        ModConfig.load();
 
         ModBlocks.BLOCKS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);

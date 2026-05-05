@@ -61,7 +61,7 @@ public class CassetteDeckBlockRenderer implements BlockEntityRenderer<CassetteDe
         poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
 
         float springProgress = 1.0f;
-        if (ModConfig.CLIENT_CONFIG.enableCassetteAnimation.get()) {
+        if (ModConfig.Client.enableCassetteAnimation) {
             springProgress = ModRenderUtils.calculateBackOut(animProgress);
         }
 
@@ -88,7 +88,7 @@ public class CassetteDeckBlockRenderer implements BlockEntityRenderer<CassetteDe
 
         CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
 
-        if (data != null && ModConfig.CLIENT_CONFIG.renderCassetteText.get()) {
+        if (data != null && ModConfig.Client.renderCassetteText) {
             String label = data.name();
             if (label.length() > 20)
                 label = label.substring(0, 17) + "...";
