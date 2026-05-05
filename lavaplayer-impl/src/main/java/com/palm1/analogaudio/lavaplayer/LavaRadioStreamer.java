@@ -1,6 +1,7 @@
 package com.palm1.analogaudio.lavaplayer;
 
 import com.palm1.analogaudio.client.audio.api.IRadioStreamer;
+import com.palm1.analogaudio.config.ModConfig;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -78,11 +79,22 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
         if (fade < 0)
             fade = 0;
 
-        AL10.alSourcef(sourceId, AL10.AL_GAIN, this.volume * fade);
-        AL10.alSource3f(sourceId, AL10.AL_POSITION, (float) x, (float) y, (float) z);
-        AL10.alSource3f(sourceId, AL11.AL_VELOCITY, (float) vX, (float) vY, (float) vZ);
+        AL10.alSourcef(sourceId, AL10.AL_GAIN, this.volume * fade * ModConfig.Client.globalRadioVolume);
+        if (!ModConfig.Client.enableSpatialAudio) {
+            AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_TRUE);
+            AL10.alSource3f(sourceId, AL10.AL_POSITION, 0, 0, 0);
+            AL10.alSource3f(sourceId, AL11.AL_VELOCITY, 0, 0, 0);
+        } else {
+            float threshold = ModConfig.Client.spatialityThreshold;
+            float interpX = (float) (pX + (x - pX) * threshold);
+            float interpY = (float) (pY + (y - pY) * threshold);
+            float interpZ = (float) (pZ + (z - pZ) * threshold);
+
+            AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_FALSE);
+            AL10.alSource3f(sourceId, AL10.AL_POSITION, interpX, interpY, interpZ);
+            AL10.alSource3f(sourceId, AL11.AL_VELOCITY, (float) vX, (float) vY, (float) vZ);
+        }
         AL10.alSourcef(sourceId, AL10.AL_PITCH, 1.0f);
-        AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_FALSE);
         AL10.alSourcef(sourceId, AL10.AL_ROLLOFF_FACTOR, 0.0f);
         AL10.alSourcef(sourceId, AL10.AL_REFERENCE_DISTANCE, 0.0f);
 
@@ -108,20 +120,32 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
 
             int buffer = buffers.poll();
             byte[] data = frame.getData();
+            boolean spatial = ModConfig.Client.enableSpatialAudio;
 
-            int monoLength = data.length / 2;
-            ByteBuffer monoBuffer = ByteBuffer.allocateDirect(monoLength);
-            monoBuffer.order(ByteOrder.nativeOrder());
+            if (!spatial) {
+                ByteBuffer stereoBuffer = ByteBuffer.allocateDirect(data.length);
+                stereoBuffer.order(ByteOrder.nativeOrder());
+                for (int i = 0; i < data.length; i += 2) {
+                    short sample = (short) (((data[i] & 0xFF) << 8) | (data[i + 1] & 0xFF));
+                    stereoBuffer.putShort(sample);
+                }
+                stereoBuffer.flip();
+                AL10.alBufferData(buffer, AL10.AL_FORMAT_STEREO16, stereoBuffer, 44100);
+            } else {
+                int monoLength = data.length / 2;
+                ByteBuffer monoBuffer = ByteBuffer.allocateDirect(monoLength);
+                monoBuffer.order(ByteOrder.nativeOrder());
 
-            for (int i = 0; i < data.length; i += 4) {
-                short left = (short) (((data[i] & 0xFF) << 8) | (data[i + 1] & 0xFF));
-                short right = (short) (((data[i + 2] & 0xFF) << 8) | (data[i + 3] & 0xFF));
-                short mono = (short) ((left + right) / 2);
-                monoBuffer.putShort(mono);
+                for (int i = 0; i < data.length; i += 4) {
+                    short left = (short) (((data[i] & 0xFF) << 8) | (data[i + 1] & 0xFF));
+                    short right = (short) (((data[i + 2] & 0xFF) << 8) | (data[i + 3] & 0xFF));
+                    short mono = (short) ((left + right) / 2);
+                    monoBuffer.putShort(mono);
+                }
+                monoBuffer.flip();
+
+                AL10.alBufferData(buffer, AL10.AL_FORMAT_MONO16, monoBuffer, 44100);
             }
-            monoBuffer.flip();
-
-            AL10.alBufferData(buffer, AL10.AL_FORMAT_MONO16, monoBuffer, 44100);
             AL10.alSourceQueueBuffers(sourceId, buffer);
         }
 

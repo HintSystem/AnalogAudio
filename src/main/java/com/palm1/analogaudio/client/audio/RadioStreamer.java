@@ -1,6 +1,7 @@
 package com.palm1.analogaudio.client.audio;
 
 import com.palm1.analogaudio.AnalogAudio;
+import com.palm1.analogaudio.config.ModConfig;
 import com.palm1.analogaudio.client.audio.api.IRadioStreamer;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.openal.AL10;
@@ -78,9 +79,10 @@ public class RadioStreamer implements IRadioStreamer {
                     }
 
                     int numChannels = channels.get(0);
-                    int format = (numChannels == 1) ? AL10.AL_FORMAT_MONO16 : AL10.AL_FORMAT_MONO16;
+                    boolean useStereo = !ModConfig.Client.enableSpatialAudio && numChannels == 2;
+                    int format = useStereo ? AL10.AL_FORMAT_STEREO16 : AL10.AL_FORMAT_MONO16;
 
-                    if (numChannels == 2) {
+                    if (numChannels == 2 && !useStereo) {
                         ShortBuffer monoPcm = org.lwjgl.BufferUtils.createShortBuffer(decodedPcm.remaining() / 2);
                         while (decodedPcm.hasRemaining()) {
                             short left = decodedPcm.get();
@@ -192,9 +194,21 @@ public class RadioStreamer implements IRadioStreamer {
             if (fade < 0)
                 fade = 0;
 
-            AL10.alSourcef(sourceId, AL10.AL_GAIN, fade * baseVolume);
-            AL10.alSource3f(sourceId, AL10.AL_POSITION, (float) x, (float) y, (float) z);
-            AL10.alSource3f(sourceId, AL11.AL_VELOCITY, (float) vX, (float) vY, (float) vZ);
+            AL10.alSourcef(sourceId, AL10.AL_GAIN, fade * baseVolume * com.palm1.analogaudio.config.ModConfig.Client.globalRadioVolume);
+            if (!ModConfig.Client.enableSpatialAudio) {
+                AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_TRUE);
+                AL10.alSource3f(sourceId, AL10.AL_POSITION, 0, 0, 0);
+                AL10.alSource3f(sourceId, AL11.AL_VELOCITY, 0, 0, 0);
+            } else {
+                float threshold = ModConfig.Client.spatialityThreshold;
+                float interpX = (float) (pX + (x - pX) * threshold);
+                float interpY = (float) (pY + (y - pY) * threshold);
+                float interpZ = (float) (pZ + (z - pZ) * threshold);
+
+                AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_FALSE);
+                AL10.alSource3f(sourceId, AL10.AL_POSITION, interpX, interpY, interpZ);
+                AL10.alSource3f(sourceId, AL11.AL_VELOCITY, (float) vX, (float) vY, (float) vZ);
+            }
 
             AL10.alSourcef(sourceId, AL10.AL_ROLLOFF_FACTOR, 0.0f);
             AL10.alSourcef(sourceId, AL10.AL_REFERENCE_DISTANCE, 0.0f);

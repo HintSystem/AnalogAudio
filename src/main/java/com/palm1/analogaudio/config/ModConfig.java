@@ -10,12 +10,37 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.palm1.analogaudio.AnalogAudio;
+
+import java.io.InputStreamReader;
+import java.io.InputStream;
 
 public class ModConfig {
     private static final String FOLDER_NAME = "analogaudio";
     private static final String CLIENT_FILE = "analogaudio.client.toml";
     private static final String SERVER_FILE = "analogaudio.server.toml";
+    private static Map<String, String> translations = null;
+
+    private static String t(String key) {
+        if (translations == null) {
+            translations = new HashMap<>();
+            try (InputStream is = ModConfig.class.getResourceAsStream("/assets/analogaudio/lang/en_us.json")) {
+                if (is != null) {
+                    translations = new Gson().fromJson(new InputStreamReader(is, StandardCharsets.UTF_8),
+                            new TypeToken<Map<String, String>>() {
+                            }.getType());
+                }
+            } catch (Exception e) {
+                AnalogAudio.LOGGER.error("Failed to load config descriptions: {}", e.getMessage());
+            }
+        }
+        return translations.getOrDefault(key, key);
+    }
 
     public static class Server {
         public static List<String> whitelistedUrls = new ArrayList<>(
@@ -29,6 +54,9 @@ public class ModConfig {
         public static boolean enableCassetteAnimation = true;
         public static boolean enableSpeakerAnimation = true;
         public static boolean renderCassetteText = true;
+        public static boolean enableSpatialAudio = true;
+        public static float spatialityThreshold = 0.3f;
+        public static float globalRadioVolume = 1.0f;
     }
 
     public static class Synced {
@@ -137,6 +165,9 @@ public class ModConfig {
                         case "enableCassetteAnimation" -> Client.enableCassetteAnimation = Boolean.parseBoolean(value);
                         case "enableSpeakerAnimation" -> Client.enableSpeakerAnimation = Boolean.parseBoolean(value);
                         case "renderCassetteText" -> Client.renderCassetteText = Boolean.parseBoolean(value);
+                        case "enableSpatialAudio" -> Client.enableSpatialAudio = Boolean.parseBoolean(value);
+                        case "spatialityThreshold" -> Client.spatialityThreshold = Float.parseFloat(value);
+                        case "globalRadioVolume" -> Client.globalRadioVolume = Float.parseFloat(value);
                     }
                 } catch (Exception ex) {
                     System.err.println("Failed to parse client config key '" + key + "': " + ex.getMessage());
@@ -165,21 +196,20 @@ public class ModConfig {
     private static void saveServer(Path path) {
         List<String> lines = new ArrayList<>();
         lines.add("# ============================================================");
-        lines.add("# Analog Audio - Server Configuration");
+        lines.add("# " + t("config.analogaudio.category.server"));
         lines.add("# ============================================================");
         lines.add("");
-        lines.add("# List of domains allowed for cassette writing. (e.g., youtube.com, catbox.moe)");
+        lines.add("# " + t("config.analogaudio.whitelistedUrls.description"));
         lines.add("whitelistedUrls = ["
                 + Server.whitelistedUrls.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) + "]");
         lines.add("");
-        lines.add(
-                "# If enabled, the list above will be treated as a blacklist (disallowing those domains) instead of a whitelist.");
+        lines.add("# " + t("config.analogaudio.whitelistAsBlacklist.description"));
         lines.add("whitelistAsBlacklist = " + Server.whitelistAsBlacklist);
         lines.add("");
-        lines.add("# Enables radio static effects and frequency filtering for Walkie Talkies and Speakers.");
+        lines.add("# " + t("config.analogaudio.enableWalkieFiltering.description"));
         lines.add("enableWalkieFiltering = " + Server.enableWalkieFiltering);
         lines.add("");
-        lines.add("# Allows players to upload and write local files to cassette tapes.");
+        lines.add("# " + t("config.analogaudio.allowFileUploads.description"));
         lines.add("allowFileUploads = " + Server.allowFileUploads);
 
         try {
@@ -192,17 +222,26 @@ public class ModConfig {
     private static void saveClient(Path path) {
         List<String> lines = new ArrayList<>();
         lines.add("# ============================================================");
-        lines.add("# Analog Audio - Client Configuration");
+        lines.add("# " + t("config.analogaudio.category.client"));
         lines.add("# ============================================================");
         lines.add("");
-        lines.add("# Enables the spring-out and spinning animations for the Cassette Deck and Radio.");
+        lines.add("# " + t("config.analogaudio.enableCassetteAnimation.description"));
         lines.add("enableCassetteAnimation = " + Client.enableCassetteAnimation);
         lines.add("");
-        lines.add("# Enables the pulse animation for Speaker blocks when playing audio.");
+        lines.add("# " + t("config.analogaudio.enableSpeakerAnimation.description"));
         lines.add("enableSpeakerAnimation = " + Client.enableSpeakerAnimation);
         lines.add("");
-        lines.add("# Renders the custom name of the cassette on the tape model while inserted.");
+        lines.add("# " + t("config.analogaudio.renderCassetteText.description"));
         lines.add("renderCassetteText = " + Client.renderCassetteText);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.enableSpatialAudio.description"));
+        lines.add("enableSpatialAudio = " + Client.enableSpatialAudio);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.spatialityThreshold.description"));
+        lines.add("spatialityThreshold = " + Client.spatialityThreshold);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.globalRadioVolume.description"));
+        lines.add("globalRadioVolume = " + Client.globalRadioVolume);
 
         try {
             Files.write(path, lines, StandardCharsets.UTF_8);
