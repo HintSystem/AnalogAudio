@@ -1,5 +1,6 @@
 package com.palm1.analogaudio.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.palm1.analogaudio.AnalogAudio;
 import com.palm1.analogaudio.registry.ModSounds;
@@ -259,10 +260,20 @@ public class RotaryTunerScreen extends Screen {
             this.resetTimer = 0;
         }
 
-        long window = Minecraft.getInstance().getWindow().getWindow();
-        if (GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) != GLFW.GLFW_PRESS) {
+        if (!isUseKeyDown()) {
             this.onClose();
         }
+    }
+
+    private boolean isUseKeyDown() {
+        InputConstants.Key key = minecraft.options.keyUse.getKey();
+        long window = minecraft.getWindow().getWindow();
+        if (key.getType() == InputConstants.Type.MOUSE) {
+            return GLFW.glfwGetMouseButton(window, key.getValue()) == GLFW.GLFW_PRESS;
+        } else if (key.getType() == InputConstants.Type.KEYSYM) {
+            return GLFW.glfwGetKey(window, key.getValue()) == GLFW.GLFW_PRESS;
+        }
+        return false;
     }
 
     @Override
