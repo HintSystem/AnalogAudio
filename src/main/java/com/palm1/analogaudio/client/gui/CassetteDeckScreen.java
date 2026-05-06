@@ -18,9 +18,14 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
 import com.palm1.analogaudio.AnalogAudio;
+import com.palm1.analogaudio.client.audio.api.IRadioStreamer;
+import com.palm1.analogaudio.client.audio.lavaplayer.LavaplayerLoader;
 import com.palm1.analogaudio.config.ModConfig;
 import com.palm1.analogaudio.util.AudioUploader;
 import com.palm1.analogaudio.item.CassetteData;
@@ -194,7 +199,8 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                                 String name = oldData != null ? oldData.name() : "";
                                 stack.set(ModDataComponents.CASSETTE_DATA.get(),
                                         new CassetteData(uuid, url, name, colorVal,
-                                                oldData != null ? oldData.volume() : 0.75f));
+                                                oldData != null ? oldData.volume() : 0.75f,
+                                                oldData != null ? oldData.duration() : 0L));
                             }
                         }) {
                     @Override
@@ -224,17 +230,40 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                 new WidgetSprites(WRITE_NORMAL, WRITE_NORMAL), button -> {
                     if (this.menu.getSlot(0).hasItem()) {
                         String url = this.urlBox.getValue();
+                        if (url.isEmpty()) {
+                            PacketDistributor.sendToServer(
+                                    new WriteCassetteC2SPacket(url, this.nameBox.getValue(),
+                                            this.selectedColor, 0L));
+                            setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.writing"),
+                                    StatusType.INFO, 60);
+                            return;
+                        }
+
                         if (validateUrl(url) == UrlValidationResult.DISALLOWED) {
                             setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.disallowed_url"),
                                     StatusType.ERROR, 60);
                             return;
                         }
 
-                        PacketDistributor.sendToServer(
-                                new WriteCassetteC2SPacket(url, this.nameBox.getValue(),
-                                        this.selectedColor));
-                        setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.writing"),
-                                StatusType.INFO, 60);
+                        setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.fetching_metadata"),
+                                StatusType.INFO, 1000);
+
+                        IRadioStreamer streamer = LavaplayerLoader.getUtilityStreamer();
+                        if (streamer == null) {
+                            setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.write_fail"),
+                                    StatusType.ERROR, 60);
+                            return;
+                        }
+
+                        streamer.fetchDuration(url, duration -> {
+                            Minecraft.getInstance().execute(() -> {
+                                PacketDistributor.sendToServer(
+                                        new WriteCassetteC2SPacket(url, this.nameBox.getValue(),
+                                                this.selectedColor, duration));
+                                setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.writing"),
+                                        StatusType.INFO, 60);
+                            });
+                        });
                     } else {
                         setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.insert_cassette"),
                                 StatusType.ERROR, 60);
@@ -304,16 +333,16 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
 
         ImageButton browseBtn = new ImageButton(this.leftPos + 44, this.topPos + 67, 18, 18,
                 new WidgetSprites(BROWSE_NORMAL, BROWSE_NORMAL), button -> {
-                    org.lwjgl.PointerBuffer filters = org.lwjgl.system.MemoryUtil.memAllocPointer(6);
-                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.ogg"));
-                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.mp3"));
-                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.wav"));
-                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.flac"));
-                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.aac"));
-                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.m4a"));
+                    PointerBuffer filters = MemoryUtil.memAllocPointer(6);
+                    filters.put(MemoryUtil.memUTF8("*.ogg"));
+                    filters.put(MemoryUtil.memUTF8("*.mp3"));
+                    filters.put(MemoryUtil.memUTF8("*.wav"));
+                    filters.put(MemoryUtil.memUTF8("*.flac"));
+                    filters.put(MemoryUtil.memUTF8("*.aac"));
+                    filters.put(MemoryUtil.memUTF8("*.m4a"));
                     filters.flip();
 
-                    String path = org.lwjgl.util.tinyfd.TinyFileDialogs.tinyfd_openFileDialog(
+                    String path = TinyFileDialogs.tinyfd_openFileDialog(
                             Component.translatable("gui.analogaudio.cassette_deck.browse").getString(),
                             "",
                             filters,
@@ -409,11 +438,11 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
             return match ? UrlValidationResult.DISALLOWED : UrlValidationResult.ALLOWED;
         } else {
             if (lower.endsWith(".ogg") || lower.contains(".ogg?") ||
-                lower.endsWith(".mp3") || lower.contains(".mp3?") ||
-                lower.endsWith(".wav") || lower.contains(".wav?") ||
-                lower.endsWith(".flac") || lower.contains(".flac?") ||
-                lower.endsWith(".aac") || lower.contains(".aac?") ||
-                lower.endsWith(".m4a") || lower.contains(".m4a?")) {
+                    lower.endsWith(".mp3") || lower.contains(".mp3?") ||
+                    lower.endsWith(".wav") || lower.contains(".wav?") ||
+                    lower.endsWith(".flac") || lower.contains(".flac?") ||
+                    lower.endsWith(".aac") || lower.contains(".aac?") ||
+                    lower.endsWith(".m4a") || lower.contains(".m4a?")) {
                 return UrlValidationResult.ALLOWED;
             }
             return match ? UrlValidationResult.ALLOWED : UrlValidationResult.DISALLOWED;

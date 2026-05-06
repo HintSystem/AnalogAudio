@@ -126,7 +126,8 @@ public class AnalogAudioNetwork {
 
                     cassette.set(ModDataComponents.CASSETTE_DATA.get(),
                             new CassetteData(uuid, url, name, data.color(),
-                                    oldData != null ? oldData.volume() : 0.75f));
+                                    oldData != null ? oldData.volume() : 0.75f,
+                                    data.duration()));
                     deckMenu.getInventory().setChanged();
                     context.reply(new WriteResultS2CPacket(0));
                 } else {

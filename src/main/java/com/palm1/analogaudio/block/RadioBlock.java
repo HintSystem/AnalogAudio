@@ -139,8 +139,9 @@ public class RadioBlock extends BaseEntityBlock {
                 }
                 ClientHooks.stopRadio(pos);
             });
+        } else {
+            return createTickerHelper(blockEntityType, ModBlockEntities.RADIO.get(), RadioBlockEntity::serverTick);
         }
-        return null;
     }
 
     @Override
@@ -172,5 +173,32 @@ public class RadioBlock extends BaseEntityBlock {
     @Override
     public int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
         return state.getValue(POWERED) ? 15 : 0;
+    }
+
+    @Override
+    protected boolean hasAnalogOutputSignal(BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
+        if (level.getBlockEntity(pos) instanceof RadioBlockEntity radio) {
+            if (!radio.isPlaying()) {
+                return 0;
+            }
+
+            ItemStack cassette = radio.getCassette();
+            if (!cassette.isEmpty()) {
+                CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
+                if (data != null && data.duration() > 0) {
+                    long elapsedTicks = level.getGameTime() - radio.getStartTime();
+                    long elapsedMs = elapsedTicks * 50;
+                    float progress = (float) elapsedMs / (float) data.duration();
+                    return Math.max(1, Math.min(15, (int) (progress * 15)));
+                }
+            }
+            return 15;
+        }
+        return 0;
     }
 }

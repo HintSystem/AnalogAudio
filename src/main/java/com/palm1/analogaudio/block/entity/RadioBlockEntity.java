@@ -10,14 +10,17 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.Direction;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -32,95 +35,108 @@ import com.palm1.analogaudio.item.CassetteData;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RadioBlockEntity extends BlockEntity implements MenuProvider {
+public class RadioBlockEntity extends BlockEntity implements MenuProvider, WorldlyContainer {
 
     private ItemStack cassetteStack = ItemStack.EMPTY;
     private ItemStack bagStack = ItemStack.EMPTY;
+    private int lastSignal = 0;
 
-    public final Container inventory = new Container() {
-        @Override
-        public int getContainerSize() {
-            return 2;
+    public final Container inventory = this;
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state,
+            RadioBlockEntity entity) {
+        if (level.getGameTime() % 20 == 0) {
+            int currentSignal = state.getAnalogOutputSignal(level, pos);
+            if (currentSignal != entity.lastSignal) {
+                entity.lastSignal = currentSignal;
+                level.updateNeighbourForOutputSignal(pos, state.getBlock());
+            }
         }
+    }
 
-        @Override
-        public boolean isEmpty() {
-            return cassetteStack.isEmpty() && bagStack.isEmpty();
+    public void updateComparator() {
+        if (this.level != null && !this.level.isClientSide()) {
+            this.level.updateNeighbourForOutputSignal(this.worldPosition, this.getBlockState().getBlock());
         }
+    }
 
-        @Override
-        public ItemStack getItem(int index) {
-            if (index == 0)
-                return cassetteStack;
-            if (index == 1)
-                return bagStack;
+    @Override
+    public int getContainerSize() {
+        return 2;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return cassetteStack.isEmpty() && bagStack.isEmpty();
+    }
+
+    @Override
+    public ItemStack getItem(int index) {
+        if (index == 0)
+            return cassetteStack;
+        if (index == 1)
+            return bagStack;
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public ItemStack removeItem(int index, int count) {
+        ItemStack stack = getItem(index);
+        if (stack.isEmpty())
             return ItemStack.EMPTY;
-        }
-
-        @Override
-        public ItemStack removeItem(int index, int count) {
-            ItemStack stack = getItem(index);
-            if (stack.isEmpty())
-                return ItemStack.EMPTY;
-            ItemStack result = stack.split(count);
-            if (stack.isEmpty())
-                setItem(index, ItemStack.EMPTY);
-            else
-                setChanged();
-            return result;
-        }
-
-        @Override
-        public ItemStack removeItemNoUpdate(int index) {
-            ItemStack stack = getItem(index);
-            if (stack.isEmpty())
-                return ItemStack.EMPTY;
+        ItemStack result = stack.split(count);
+        if (stack.isEmpty())
             setItem(index, ItemStack.EMPTY);
-            return stack;
-        }
-
-        @Override
-        public void setItem(int index, ItemStack stack) {
-            if (index == 0)
-                cassetteStack = stack;
-            else if (index == 1)
-                bagStack = stack;
+        else
             setChanged();
-            onInventoryChanged();
-        }
+        return result;
+    }
 
-        @Override
-        public int getMaxStackSize() {
-            return 1;
-        }
+    @Override
+    public ItemStack removeItemNoUpdate(int index) {
+        ItemStack stack = getItem(index);
+        if (stack.isEmpty())
+            return ItemStack.EMPTY;
+        setItem(index, ItemStack.EMPTY);
+        return stack;
+    }
 
-        @Override
-        public void setChanged() {
-            RadioBlockEntity.this.setChanged();
-        }
+    @Override
+    public void setItem(int index, ItemStack stack) {
+        if (index == 0)
+            cassetteStack = stack;
+        else if (index == 1)
+            bagStack = stack;
+        setChanged();
+        onInventoryChanged();
+    }
 
-        @Override
-        public boolean stillValid(Player player) {
-            return true;
-        }
+    @Override
+    public int getMaxStackSize() {
+        return 1;
+    }
 
-        @Override
-        public boolean canPlaceItem(int index, ItemStack stack) {
-            if (index == 0)
-                return stack.is(ModItems.CASSETTE_TAPE.get());
-            if (index == 1)
-                return stack.is(ModItems.CASSETTE_BAG.get());
-            return false;
-        }
+    @Override
+    public boolean stillValid(Player player) {
+        return true;
+    }
 
-        @Override
-        public void clearContent() {
-            cassetteStack = ItemStack.EMPTY;
-            bagStack = ItemStack.EMPTY;
-            setChanged();
-            onInventoryChanged();
-        }
-    };
+    @Override
+    public boolean canPlaceItem(int index, ItemStack stack) {
+        if (index == 0)
+            return stack.is(ModItems.CASSETTE_TAPE.get());
+        if (index == 1)
+            return stack.is(ModItems.CASSETTE_BAG.get());
+        return false;
+    }
+
+    @Override
+    public void clearContent() {
+        cassetteStack = ItemStack.EMPTY;
+        bagStack = ItemStack.EMPTY;
+        setChanged();
+        onInventoryChanged();
+    }
 
     private long startTime = 0;
     private float volume = 0.75f;
@@ -230,6 +246,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
                 this.pausedOffset = 0;
             }
             updatePowerState();
+            updateComparator();
             updateAndSync();
         } else if (this.level != null && this.level.isClientSide()) {
             loadVolumeFromCassette();
@@ -270,6 +287,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
         this.shuffle = shuffle;
         saveVolumeToCassette();
         updatePowerState();
+        updateComparator();
         updateAndSync();
     }
 
@@ -284,6 +302,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
                     this.startTime = 0;
                     this.pausedOffset = 0;
                     updatePowerState();
+                    updateComparator();
                     updateAndSync();
                 } else {
                     this.startTime = level.getGameTime();
@@ -359,13 +378,66 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
 
     public void setPowered(boolean powered) {
         if (powered && !wasPowered && this.level != null) {
-            this.startTime = this.level.getGameTime();
-            this.pausedOffset = 0;
-            this.playing = true;
+            if (this.playing) {
+                this.pausedOffset = this.level.getGameTime() - this.startTime;
+                this.playing = false;
+            } else {
+                boolean hasData = false;
+                ItemStack currentCassette = cassetteStack;
+                ItemStack currentBag = bagStack;
+                if (!currentBag.isEmpty()) {
+                    List<ItemStack> contents = currentBag.get(ModDataComponents.BAG_CONTENTS.get());
+                    if (contents != null && !contents.isEmpty()) {
+                        for (ItemStack s : contents) {
+                            if (s.has(ModDataComponents.CASSETTE_DATA.get())) {
+                                hasData = true;
+                                break;
+                            }
+                        }
+                    }
+                } else if (!currentCassette.isEmpty()) {
+                    hasData = currentCassette.has(ModDataComponents.CASSETTE_DATA.get());
+                }
+
+                if (hasData) {
+                    this.startTime = this.level.getGameTime() - this.pausedOffset;
+                    this.playing = true;
+                }
+            }
             updatePowerState();
             updateAndSync();
         }
         this.wasPowered = powered;
+    }
+
+    @Override
+    public int[] getSlotsForFace(Direction side) {
+        if (side == Direction.UP) {
+            return new int[] { 0 };
+        } else if (side == Direction.DOWN) {
+            return new int[] { 0, 1 };
+        } else {
+            return new int[] { 1 };
+        }
+    }
+
+    @Override
+    public boolean canPlaceItemThroughFace(int index, ItemStack stack, @Nullable Direction direction) {
+        if (index == 0) {
+            return direction == Direction.UP && stack.is(ModItems.CASSETTE_TAPE.get());
+        }
+        if (index == 1) {
+            return direction != Direction.UP && direction != Direction.DOWN && stack.is(ModItems.CASSETTE_BAG.get());
+        }
+        return false;
+    }
+
+    @Override
+    public boolean canTakeItemThroughFace(int index, ItemStack stack, Direction direction) {
+        if (direction == Direction.DOWN) {
+            return !playing && pausedOffset == 0 && !looping;
+        }
+        return false;
     }
 
     private void updateAndSync() {
@@ -528,7 +600,8 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider {
             CassetteData oldData = playingStack.get(ModDataComponents.CASSETTE_DATA.get());
             if (oldData != null) {
                 playingStack.set(ModDataComponents.CASSETTE_DATA.get(),
-                        new CassetteData(oldData.uuid(), oldData.url(), oldData.name(), oldData.color(), this.volume));
+                        new CassetteData(oldData.uuid(), oldData.url(), oldData.name(), oldData.color(), this.volume,
+                                oldData.duration()));
 
                 if (isPlayingFromBag()) {
                     List<ItemStack> contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());

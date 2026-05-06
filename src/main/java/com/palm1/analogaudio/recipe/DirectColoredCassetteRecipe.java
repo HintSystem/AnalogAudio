@@ -67,7 +67,7 @@ public class DirectColoredCassetteRecipe extends CustomRecipe {
         }
 
         ItemStack result = new ItemStack(ModItems.CASSETTE_TAPE.get());
-        CassetteData data = new CassetteData(UUID.randomUUID().toString(), "", "", 0xFF000000 | color, 0.75f);
+        CassetteData data = new CassetteData(UUID.randomUUID().toString(), "", "", 0xFF000000 | color, 0.75f, 0L);
         result.set(ModDataComponents.CASSETTE_DATA.get(), data);
 
         return result;

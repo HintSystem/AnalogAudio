@@ -33,6 +33,7 @@
   "gui.analogaudio.cassette_deck.status.erased": "Erased!",
   "gui.analogaudio.cassette_deck.status.error_code": "Error: %s",
   "gui.analogaudio.cassette_deck.status.disallowed_url": "Error: URL not allowed.",
+  "gui.analogaudio.cassette_deck.status.fetching_metadata": "Fetching metadata...",
   "gui.analogaudio.cassette_deck.url_disclaimer": "Supports URLs from Youtube, Bandcamp, Soundcloud, or any OGG download.",
   "gui.analogaudio.cassette_deck.name_disclaimer": "The name that will be shown on the cassette tape.",
   "gui.analogaudio.rotary_tuner.title": "Tuning Frequency",
