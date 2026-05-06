@@ -39,7 +39,7 @@ public class AnalogAudioNetwork {
     };
     public static BiConsumer<SyncConfigS2CPacket, IPayloadContext> syncConfigHandler = (d, c) -> {
         ModConfig.Synced.set(d.whitelistedUrls(), d.whitelistAsBlacklist(), d.enableWalkieFiltering(),
-                d.allowFileUploads());
+                d.allowFileUploads(), d.globalRadioRange(), d.globalSpeakerRange());
     };
 
     public static void registerPayloads(final RegisterPayloadHandlersEvent event) {
@@ -93,7 +93,9 @@ public class AnalogAudioNetwork {
                     ModConfig.Server.whitelistedUrls,
                     ModConfig.Server.whitelistAsBlacklist,
                     ModConfig.Server.enableWalkieFiltering,
-                    ModConfig.Server.allowFileUploads));
+                    ModConfig.Server.allowFileUploads,
+                    ModConfig.Server.globalRadioRange,
+                    ModConfig.Server.globalSpeakerRange));
         }
     }
 

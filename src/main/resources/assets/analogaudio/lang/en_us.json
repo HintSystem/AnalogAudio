@@ -82,6 +82,8 @@
   "config.analogaudio.enableSpatialAudio.description": "Enables directional audio for blocks that play audio.",
   "config.analogaudio.spatialityThreshold": "Spatiality Threshold",
   "config.analogaudio.spatialityThreshold.description": "Blends directional and non-directional audio to smoothen the effect. 1.0 = fully directional, 0.0 = fully non-directional",
+  "config.analogaudio.speakerEcho": "Speaker Echo",
+  "config.analogaudio.speakerEcho.description": "Enables being able to hear your own walkie talkie input through speaker blocks.",
   "config.analogaudio.globalRadioVolume": "Global Radio Volume",
   "config.analogaudio.globalRadioVolume.description": "Controls your master volume for radios.",
   "config.analogaudio.whitelistedUrls": "Whitelisted URLs",
@@ -92,5 +94,9 @@
   "config.analogaudio.enableWalkieFiltering.description": "Enables the static effect for walkie talkies and speakers.",
   "config.analogaudio.allowFileUploads": "Allow File Uploads",
   "config.analogaudio.allowFileUploads.description": "Allows players to upload and write local files to cassette tapes.",
-  "config.analogaudio.allowFileUploads.disclaimer": "Allowing players to upload their own files, use at your own risk. Files will be hosted on %s, but clients will download them to hear them."
+  "config.analogaudio.allowFileUploads.disclaimer": "Allowing players to upload their own files, use at your own risk. Files will be hosted on %s, but clients will download them to hear them.",
+  "config.analogaudio.globalRadioRange": "Global Radio Range",
+  "config.analogaudio.globalRadioRange.description": "Controls the maximum distance in blocks you can hear radio audio before it falls off.",
+  "config.analogaudio.globalSpeakerRange": "Global Speaker Range",
+  "config.analogaudio.globalSpeakerRange.description": "Controls the maximum distance in blocks you can hear speaker audio before it falls off."
 }

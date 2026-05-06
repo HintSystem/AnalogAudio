@@ -11,7 +11,7 @@ import java.util.List;
 import com.palm1.analogaudio.AnalogAudio;
 
 public record SyncConfigS2CPacket(List<String> whitelistedUrls, boolean whitelistAsBlacklist,
-                boolean enableWalkieFiltering, boolean allowFileUploads)
+                boolean enableWalkieFiltering, boolean allowFileUploads, int globalRadioRange, int globalSpeakerRange)
                 implements CustomPacketPayload {
 
         public static final Type<SyncConfigS2CPacket> TYPE = new Type<>(
@@ -22,6 +22,8 @@ public record SyncConfigS2CPacket(List<String> whitelistedUrls, boolean whitelis
                         ByteBufCodecs.BOOL, SyncConfigS2CPacket::whitelistAsBlacklist,
                         ByteBufCodecs.BOOL, SyncConfigS2CPacket::enableWalkieFiltering,
                         ByteBufCodecs.BOOL, SyncConfigS2CPacket::allowFileUploads,
+                        ByteBufCodecs.VAR_INT, SyncConfigS2CPacket::globalRadioRange,
+                        ByteBufCodecs.VAR_INT, SyncConfigS2CPacket::globalSpeakerRange,
                         SyncConfigS2CPacket::new);
 
         @Override

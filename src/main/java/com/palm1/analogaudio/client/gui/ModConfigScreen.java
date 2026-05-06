@@ -54,6 +54,15 @@ public class ModConfigScreen {
                                                                                 val -> ModConfig.Client.enableSpatialAudio = val)
                                                                 .controller(TickBoxControllerBuilder::create)
                                                                 .build())
+                                                .option(Option.<Boolean>createBuilder()
+                                                                .name(Component.translatable(
+                                                                                "config.analogaudio.speakerEcho"))
+                                                                .description(OptionDescription.of(Component
+                                                                                .translatable("config.analogaudio.speakerEcho.description")))
+                                                                .binding(false, () -> ModConfig.Client.speakerEcho,
+                                                                                val -> ModConfig.Client.speakerEcho = val)
+                                                                .controller(TickBoxControllerBuilder::create)
+                                                                .build())
                                                 .option(Option.<Float>createBuilder()
                                                                 .name(Component.translatable(
                                                                                 "config.analogaudio.spatialityThreshold"))
@@ -134,6 +143,34 @@ public class ModConfigScreen {
                                                                 .binding(false, () -> ModConfig.Server.allowFileUploads,
                                                                                 val -> ModConfig.Server.allowFileUploads = val)
                                                                 .controller(TickBoxControllerBuilder::create)
+                                                                .build())
+                                                .option(Option.<Integer>createBuilder()
+                                                                .name(Component.translatable(
+                                                                                "config.analogaudio.globalRadioRange"))
+                                                                .description(OptionDescription.of(Component
+                                                                                .translatable("config.analogaudio.globalRadioRange.description")))
+                                                                .binding(64, () -> ModConfig.Server.globalRadioRange,
+                                                                                val -> ModConfig.Server.globalRadioRange = val)
+                                                                .controller(opt -> dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder
+                                                                                .create(opt)
+                                                                                .range(0, 512)
+                                                                                .step(1)
+                                                                                .formatValue(v -> Component.literal(
+                                                                                                v + " Blocks")))
+                                                                .build())
+                                                .option(Option.<Integer>createBuilder()
+                                                                .name(Component.translatable(
+                                                                                "config.analogaudio.globalSpeakerRange"))
+                                                                .description(OptionDescription.of(Component
+                                                                                .translatable("config.analogaudio.globalSpeakerRange.description")))
+                                                                .binding(64, () -> ModConfig.Server.globalSpeakerRange,
+                                                                                val -> ModConfig.Server.globalSpeakerRange = val)
+                                                                .controller(opt -> dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder
+                                                                                .create(opt)
+                                                                                .range(0, 512)
+                                                                                .step(1)
+                                                                                .formatValue(v -> Component.literal(
+                                                                                                v + " Blocks")))
                                                                 .build())
                                                 .build())
                                 .save(ModConfig::save)

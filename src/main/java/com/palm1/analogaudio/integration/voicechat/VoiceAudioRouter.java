@@ -117,7 +117,7 @@ public class VoiceAudioRouter {
                 LocationalSoundPacket locationalPacket = event.getPacket().locationalSoundPacketBuilder()
                         .channelId(sessionChannelId)
                         .category("speaker_blocks")
-                        .distance(64.0f)
+                        .distance((float) ModConfig.Synced.globalSpeakerRange)
                         .position(position)
                         .build();
 
@@ -125,13 +125,16 @@ public class VoiceAudioRouter {
                         : null;
                 if (server == null)
                     return;
-
                 for (net.minecraft.server.level.ServerPlayer recipient : server.getPlayerList().getPlayers()) {
+                    if (recipient == actualPlayer && !ModConfig.Client.speakerEcho)
+                        continue;
+
                     Vec3 recipientGlobalPos = SableCompat
                             .getGlobalPos(recipient.level(), recipient.position());
                     double distSq = recipientGlobalPos.distanceToSqr(speakerPos);
 
-                    if (distSq > 64 * 64)
+                    int range = ModConfig.Synced.globalSpeakerRange;
+                    if (distSq > range * range)
                         continue;
 
                     VoicechatConnection targetConn = serverApi.getConnectionOf(recipient.getUUID());

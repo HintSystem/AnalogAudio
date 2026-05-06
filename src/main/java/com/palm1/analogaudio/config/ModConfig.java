@@ -48,6 +48,8 @@ public class ModConfig {
         public static boolean whitelistAsBlacklist = false;
         public static boolean enableWalkieFiltering = true;
         public static boolean allowFileUploads = false;
+        public static int globalRadioRange = 64;
+        public static int globalSpeakerRange = 64;
     }
 
     public static class Client {
@@ -57,6 +59,7 @@ public class ModConfig {
         public static boolean enableSpatialAudio = true;
         public static float spatialityThreshold = 0.3f;
         public static float globalRadioVolume = 1.0f;
+        public static boolean speakerEcho = false;
     }
 
     public static class Synced {
@@ -64,12 +67,16 @@ public class ModConfig {
         public static boolean whitelistAsBlacklist = Server.whitelistAsBlacklist;
         public static boolean enableWalkieFiltering = Server.enableWalkieFiltering;
         public static boolean allowFileUploads = Server.allowFileUploads;
+        public static int globalRadioRange = Server.globalRadioRange;
+        public static int globalSpeakerRange = Server.globalSpeakerRange;
 
-        public static void set(List<String> urls, boolean asBlacklist, boolean walkieFiltering, boolean fileUploads) {
+        public static void set(List<String> urls, boolean asBlacklist, boolean walkieFiltering, boolean fileUploads, int radioRange, int speakerRange) {
             whitelistedUrls = new ArrayList<>(urls);
             whitelistAsBlacklist = asBlacklist;
             enableWalkieFiltering = walkieFiltering;
             allowFileUploads = fileUploads;
+            globalRadioRange = radioRange;
+            globalSpeakerRange = speakerRange;
         }
     }
 
@@ -130,6 +137,8 @@ public class ModConfig {
                         case "whitelistAsBlacklist" -> Server.whitelistAsBlacklist = Boolean.parseBoolean(value);
                         case "enableWalkieFiltering" -> Server.enableWalkieFiltering = Boolean.parseBoolean(value);
                         case "allowFileUploads" -> Server.allowFileUploads = Boolean.parseBoolean(value);
+                        case "globalRadioRange" -> Server.globalRadioRange = Integer.parseInt(value);
+                        case "globalSpeakerRange" -> Server.globalSpeakerRange = Integer.parseInt(value);
                     }
                 } catch (Exception ex) {
                     System.err.println("Failed to parse server config key '" + key + "': " + ex.getMessage());
@@ -168,6 +177,7 @@ public class ModConfig {
                         case "enableSpatialAudio" -> Client.enableSpatialAudio = Boolean.parseBoolean(value);
                         case "spatialityThreshold" -> Client.spatialityThreshold = Float.parseFloat(value);
                         case "globalRadioVolume" -> Client.globalRadioVolume = Float.parseFloat(value);
+                        case "speakerEcho" -> Client.speakerEcho = Boolean.parseBoolean(value);
                     }
                 } catch (Exception ex) {
                     System.err.println("Failed to parse client config key '" + key + "': " + ex.getMessage());
@@ -211,6 +221,12 @@ public class ModConfig {
         lines.add("");
         lines.add("# " + t("config.analogaudio.allowFileUploads.description"));
         lines.add("allowFileUploads = " + Server.allowFileUploads);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.globalRadioRange.description"));
+        lines.add("globalRadioRange = " + Server.globalRadioRange);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.globalSpeakerRange.description"));
+        lines.add("globalSpeakerRange = " + Server.globalSpeakerRange);
 
         try {
             Files.write(path, lines, StandardCharsets.UTF_8);
@@ -242,6 +258,9 @@ public class ModConfig {
         lines.add("");
         lines.add("# " + t("config.analogaudio.globalRadioVolume.description"));
         lines.add("globalRadioVolume = " + Client.globalRadioVolume);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.speakerEcho.description"));
+        lines.add("speakerEcho = " + Client.speakerEcho);
 
         try {
             Files.write(path, lines, StandardCharsets.UTF_8);

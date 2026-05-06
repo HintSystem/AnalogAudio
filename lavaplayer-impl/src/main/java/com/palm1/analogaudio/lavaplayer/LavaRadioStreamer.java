@@ -76,7 +76,7 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
         double dz = z - pZ;
         double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-        float maxDist = 64.0f;
+        float maxDist = (float) ModConfig.Synced.globalRadioRange;
         float fade = 1.0f - (float) (dist / maxDist);
         if (fade < 0)
             fade = 0;
