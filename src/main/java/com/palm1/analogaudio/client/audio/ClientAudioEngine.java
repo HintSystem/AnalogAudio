@@ -10,14 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -77,8 +69,8 @@ public class ClientAudioEngine {
                 PLAYING.remove(identity);
             }
 
-            if (data.url().endsWith(".ogg") || data.url().startsWith("file:/")) {
-                RadioStreamer newStreamer = new RadioStreamer();
+            IRadioStreamer newStreamer = LavaplayerLoader.getStreamer();
+            if (newStreamer != null) {
                 newStreamer.setCurrentUUID(data.uuid());
                 PLAYING.put(identity, newStreamer);
                 if (identity instanceof net.minecraft.core.BlockPos bPos) {
@@ -87,32 +79,16 @@ public class ClientAudioEngine {
                                 .sendToServer(new com.palm1.analogaudio.network.packet.NextTrackC2SPacket(bPos));
                     });
                 }
-                if (!EXECUTOR.isShutdown() && active) {
-                    EXECUTOR.submit(() -> ClientAudioEngine.downloadAndPlay(identity, data, startTime));
-                }
+                newStreamer.start();
+
+                long currentTick = Minecraft.getInstance().level.getGameTime();
+                long offsetMs = Math.max(0, (currentTick - startTime) * 50);
+
+                newStreamer.playTrack(data.url(), offsetMs);
                 streamer = newStreamer;
             } else {
-                IRadioStreamer newStreamer = LavaplayerLoader.getStreamer();
-                if (newStreamer != null) {
-                    newStreamer.setCurrentUUID(data.uuid());
-                    PLAYING.put(identity, newStreamer);
-                    if (identity instanceof net.minecraft.core.BlockPos bPos) {
-                        newStreamer.setOnTrackEnd(() -> {
-                            net.neoforged.neoforge.network.PacketDistributor
-                                    .sendToServer(new com.palm1.analogaudio.network.packet.NextTrackC2SPacket(bPos));
-                        });
-                    }
-                    newStreamer.start();
-
-                    long currentTick = Minecraft.getInstance().level.getGameTime();
-                    long offsetMs = Math.max(0, (currentTick - startTime) * 50);
-
-                    newStreamer.playTrack(data.url(), offsetMs);
-                    streamer = newStreamer;
-                } else {
-                    FAILED.add(identity);
-                    return;
-                }
+                FAILED.add(identity);
+                return;
             }
         }
         LAST_START_TIMES.put(identity, startTime);
@@ -128,13 +104,6 @@ public class ClientAudioEngine {
             streamer.updatePosition(globalPos.x, globalPos.y, globalPos.z, pPos.x, pPos.y, pPos.z, velocity.x,
                     velocity.y, velocity.z);
 
-            if (streamer instanceof RadioStreamer) {
-                RadioStreamer oggStreamer = (RadioStreamer) streamer;
-                Path cachedFile = oggStreamer.getCurrentFile();
-                if (cachedFile != null) {
-                    oggStreamer.play(cachedFile, startTime);
-                }
-            }
         }
     }
 
@@ -164,93 +133,6 @@ public class ClientAudioEngine {
 
     public static void prepareForSession() {
         active = true;
-    }
-
-    private static void downloadAndPlay(Object identity, CassetteData data, long startTime) {
-        if (!active)
-            return;
-        AnalogAudio.LOGGER.info("Starting audio process for URL: {}", data.url());
-        try {
-            Path cacheDir = Minecraft.getInstance().gameDirectory.toPath().resolve("analogaudio_cache");
-            if (!Files.exists(cacheDir)) {
-                Files.createDirectories(cacheDir);
-                AnalogAudio.LOGGER.info("Created cache directory: {}", cacheDir);
-            }
-
-            Path file = cacheDir.resolve(data.uuid() + ".ogg");
-            if (!Files.exists(file)) {
-                AnalogAudio.LOGGER.info("Downloading/Copying file to: {}", file);
-
-                if (data.url().startsWith("file:/")) {
-                    Path sourceFile = Path.of(new URL(data.url()).toURI());
-                    Files.copy(sourceFile, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                } else {
-                    HttpURLConnection connection = (HttpURLConnection) URI.create(data.url()).toURL()
-                            .openConnection();
-                    connection.setRequestProperty("User-Agent",
-                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36");
-
-                    int responseCode = connection.getResponseCode();
-                    AnalogAudio.LOGGER.info("HTTP Response Code: {}", responseCode);
-
-                    if (responseCode >= 200 && responseCode < 300) {
-                        long contentLength = connection.getContentLengthLong();
-                        try (InputStream in = connection.getInputStream();
-                                OutputStream out = Files.newOutputStream(file)) {
-                            byte[] buffer = new byte[8192];
-                            int bytesRead;
-                            long totalRead = 0;
-                            while ((bytesRead = in.read(buffer)) != -1) {
-                                out.write(buffer, 0, bytesRead);
-                                totalRead += bytesRead;
-                                if (contentLength > 0) {
-                                    float progress = (float) totalRead / contentLength;
-                                    displayActionBarProgress(progress);
-                                }
-                            }
-                        }
-                    } else {
-                        ClientHooks.setStatus(
-                                Component.translatable("gui.analogaudio.cassette_deck.status.error_code", responseCode),
-                                com.palm1.analogaudio.client.gui.CassetteDeckScreen.StatusType.ERROR, 100);
-                        throw new IOException("Server returned HTTP " + responseCode);
-                    }
-                }
-                AnalogAudio.LOGGER.info("Process complete.");
-                ClientHooks.setStatusMessage(Component
-                        .translatable("gui.analogaudio.cassette_deck.status.write_success"));
-                if (Minecraft.getInstance().player != null) {
-                    Minecraft.getInstance().player.displayClientMessage(Component.empty(),
-                            true);
-                }
-            } else {
-                AnalogAudio.LOGGER.info("File already in cache: {}", file);
-                ClientHooks.setStatus(
-                        Component.translatable("gui.analogaudio.cassette_deck.status.write_success"),
-                        com.palm1.analogaudio.client.gui.CassetteDeckScreen.StatusType.SUCCESS, 100);
-            }
-
-            IRadioStreamer streamer = PLAYING.get(identity);
-            if (streamer instanceof RadioStreamer) {
-                ((RadioStreamer) streamer).play(file, startTime);
-            } else {
-                AnalogAudio.LOGGER.warn("No streamer found for identity: {}", identity);
-            }
-        } catch (Exception e) {
-            AnalogAudio.LOGGER.error("Failed to download or play audio from {}: {}", data.url(),
-                    e.getMessage());
-            ClientHooks.setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.download_fail"),
-                    com.palm1.analogaudio.client.gui.CassetteDeckScreen.StatusType.ERROR, 100);
-            if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(
-                        Component.literal("§c")
-                                .append(Component.translatable("gui.analogaudio.cassette_deck.status.download_fail")),
-                        true);
-            }
-            e.printStackTrace();
-            PLAYING.remove(identity);
-            FAILED.add(identity);
-        }
     }
 
     private static void displayActionBarProgress(float progress) {
