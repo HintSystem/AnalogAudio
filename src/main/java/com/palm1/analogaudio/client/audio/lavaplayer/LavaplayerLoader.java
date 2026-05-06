@@ -12,12 +12,14 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 public class LavaplayerLoader {
-    private static IRadioStreamer implementation;
     private static ClassLoader classLoader;
 
     public static IRadioStreamer getStreamer() {
-        if (implementation == null) {
+        if (classLoader == null) {
             load();
+        }
+        if (classLoader == null) {
+            return null;
         }
         try {
             return (IRadioStreamer) Class
@@ -29,7 +31,10 @@ public class LavaplayerLoader {
         }
     }
 
-    private static void load() {
+    private static synchronized void load() {
+        if (classLoader != null) {
+            return;
+        }
         try {
             Path cacheDir = Minecraft.getInstance().gameDirectory.toPath().resolve("analogaudio_internal");
             if (!Files.exists(cacheDir)) {
@@ -37,12 +42,14 @@ public class LavaplayerLoader {
             }
             Path libJar = cacheDir.resolve("lavaplayer.jar");
 
-            try (InputStream in = LavaplayerLoader.class
-                    .getResourceAsStream("/assets/analogaudio/lavaplayer/lavaplayer.jar")) {
-                if (in == null) {
-                    throw new RuntimeException("Could not find lavaplayer.jar in mod assets!");
+            if (!Files.exists(libJar)) {
+                try (InputStream in = LavaplayerLoader.class
+                        .getResourceAsStream("/assets/analogaudio/lavaplayer/lavaplayer.jar")) {
+                    if (in == null) {
+                        throw new RuntimeException("Could not find lavaplayer.jar in mod assets!");
+                    }
+                    Files.copy(in, libJar, StandardCopyOption.REPLACE_EXISTING);
                 }
-                Files.copy(in, libJar, StandardCopyOption.REPLACE_EXISTING);
             }
 
             classLoader = new URLClassLoader(new URL[] { libJar.toUri().toURL() },
