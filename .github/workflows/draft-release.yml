@@ -23,6 +23,7 @@ jobs:
         run: |
           # Read project properties
           MOD_NAME=$(grep 'mod_name=' gradle.properties | cut -d'=' -f2 | xargs)
+          MOD_ID=$(grep 'mod_id=' gradle.properties | cut -d'=' -f2 | xargs)
           MOD_VERSION=$(grep 'mod_version=' gradle.properties | cut -d'=' -f2 | xargs)
           GAME_VERSIONS=$(grep 'mod_game_versions=' gradle.properties | cut -d'=' -f2 | xargs)
           MODRINTH_ID=$(grep 'modrinth_id=' gradle.properties | cut -d'=' -f2 | xargs)
