@@ -12,4 +12,6 @@ public interface IRadioStreamer {
     void stop();
     void start();
     void playTrack(String url, long offsetMs);
+    default void fetchDuration(String url, java.util.function.Consumer<Long> callback) {
+    }
 }

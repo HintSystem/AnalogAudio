@@ -251,6 +251,40 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
     }
 
     @Override
+    public void fetchDuration(String url, java.util.function.Consumer<Long> callback) {
+        System.out.println("Fetching duration for: " + url);
+        String finalUrl = url;
+        if (url.startsWith("file:/")) {
+            finalUrl = url.substring(6);
+        }
+        PLAYER_MANAGER.loadItem(finalUrl, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack track) {
+                callback.accept(track.getDuration());
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                if (!playlist.getTracks().isEmpty()) {
+                    callback.accept(playlist.getTracks().get(0).getDuration());
+                } else {
+                    callback.accept(0L);
+                }
+            }
+
+            @Override
+            public void noMatches() {
+                callback.accept(0L);
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+                callback.accept(0L);
+            }
+        });
+    }
+
+    @Override
     public boolean isPlaying() {
         return playing;
     }

@@ -8,7 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-public record WriteCassetteC2SPacket(String url, String name, int color) implements CustomPacketPayload {
+public record WriteCassetteC2SPacket(String url, String name, int color, long duration) implements CustomPacketPayload {
     public static final Type<WriteCassetteC2SPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID, "write_cassette"));
 
@@ -16,6 +16,7 @@ public record WriteCassetteC2SPacket(String url, String name, int color) impleme
             ByteBufCodecs.STRING_UTF8, WriteCassetteC2SPacket::url,
             ByteBufCodecs.STRING_UTF8, WriteCassetteC2SPacket::name,
             ByteBufCodecs.INT, WriteCassetteC2SPacket::color,
+            ByteBufCodecs.VAR_LONG, WriteCassetteC2SPacket::duration,
             WriteCassetteC2SPacket::new);
 
     @Override
