@@ -45,6 +45,7 @@ jobs:
         id: metadata
         run: |
           MOD_NAME=$(grep 'mod_name=' gradle.properties | cut -d'=' -f2 | xargs)
+          MOD_VERSION=$(grep 'mod_version=' gradle.properties | cut -d'=' -f2 | xargs)
           MODRINTH_ID=$(grep 'modrinth_id=' gradle.properties | cut -d'=' -f2 | xargs)
           GAME_VERSIONS=$(grep 'mod_game_versions=' gradle.properties | cut -d'=' -f2 | xargs)
           DEPS=$(grep 'modrinth_dependencies=' gradle.properties | cut -d'=' -f2 | xargs)
@@ -75,7 +76,7 @@ jobs:
           MOD_NAME_DASHED=$(echo $MOD_NAME | tr ' ' '-')
 
           # Find pre-downloaded JAR files
-          echo "jar=$(find build/release-artifacts -name "*$MOD_NAME_DASHED*.jar" | head -n 1)" >> $GITHUB_OUTPUT
+          echo "jar=$(find build/release-artifacts -name "$MOD_NAME_DASHED-$MOD_VERSION.jar" | head -n 1)" >> $GITHUB_OUTPUT
           
           echo "game_versions=$G_VERSIONS_JSON" >> $GITHUB_OUTPUT
           echo "deps=$(parse_deps "$DEPS")" >> $GITHUB_OUTPUT

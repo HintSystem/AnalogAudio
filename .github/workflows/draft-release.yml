@@ -81,6 +81,6 @@ jobs:
           name: "${{ steps.check_version.outputs.mod_name }} ${{ steps.check_version.outputs.mod_version }}"
           body: ${{ github.event.head_commit.message }}
           files: |
-            build/libs/${{ steps.check_version.outputs.mod_name_dashed }}-*.jar
+            build/libs/${{ steps.check_version.outputs.mod_name_dashed }}-${{ steps.check_version.outputs.mod_version }}.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
