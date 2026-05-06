@@ -304,15 +304,20 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
 
         ImageButton browseBtn = new ImageButton(this.leftPos + 44, this.topPos + 67, 18, 18,
                 new WidgetSprites(BROWSE_NORMAL, BROWSE_NORMAL), button -> {
-                    org.lwjgl.PointerBuffer filters = org.lwjgl.system.MemoryUtil.memAllocPointer(1);
+                    org.lwjgl.PointerBuffer filters = org.lwjgl.system.MemoryUtil.memAllocPointer(6);
                     filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.ogg"));
+                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.mp3"));
+                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.wav"));
+                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.flac"));
+                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.aac"));
+                    filters.put(org.lwjgl.system.MemoryUtil.memUTF8("*.m4a"));
                     filters.flip();
 
                     String path = org.lwjgl.util.tinyfd.TinyFileDialogs.tinyfd_openFileDialog(
                             Component.translatable("gui.analogaudio.cassette_deck.browse").getString(),
                             "",
                             filters,
-                            "Audio Files (*.ogg)",
+                            "Audio Files (*.ogg, *.mp3, *.wav, *.flac, *.aac, *.m4a)",
                             false);
 
                     org.lwjgl.system.MemoryUtil.memFree(filters);
@@ -403,7 +408,12 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
         if (isBlacklist) {
             return match ? UrlValidationResult.DISALLOWED : UrlValidationResult.ALLOWED;
         } else {
-            if (lower.endsWith(".ogg") || lower.contains(".ogg?")) {
+            if (lower.endsWith(".ogg") || lower.contains(".ogg?") ||
+                lower.endsWith(".mp3") || lower.contains(".mp3?") ||
+                lower.endsWith(".wav") || lower.contains(".wav?") ||
+                lower.endsWith(".flac") || lower.contains(".flac?") ||
+                lower.endsWith(".aac") || lower.contains(".aac?") ||
+                lower.endsWith(".m4a") || lower.contains(".m4a?")) {
                 return UrlValidationResult.ALLOWED;
             }
             return match ? UrlValidationResult.ALLOWED : UrlValidationResult.DISALLOWED;

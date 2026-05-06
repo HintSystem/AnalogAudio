@@ -13,6 +13,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 
 import org.lwjgl.openal.AL10;
@@ -28,6 +29,7 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
     static {
         PLAYER_MANAGER = new DefaultAudioPlayerManager();
         PLAYER_MANAGER.registerSourceManager(new YoutubeAudioSourceManager());
+        PLAYER_MANAGER.registerSourceManager(new LocalAudioSourceManager());
         AudioSourceManagers.registerRemoteSources(PLAYER_MANAGER);
         PLAYER_MANAGER.getConfiguration()
                 .setOutputFormat(com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.COMMON_PCM_S16_BE);
@@ -190,7 +192,11 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
 
     @Override
     public void playTrack(String url, long offsetMs) {
-        PLAYER_MANAGER.loadItem(url, new AudioLoadResultHandler() {
+        String finalUrl = url;
+        if (url.startsWith("file:/")) {
+            finalUrl = url.substring(6);
+        }
+        PLAYER_MANAGER.loadItem(finalUrl, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 if (offsetMs > 0) {
