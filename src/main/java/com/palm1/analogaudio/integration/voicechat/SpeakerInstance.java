@@ -12,5 +12,5 @@ public interface SpeakerInstance {
 
     Object getIdentity();
 
-    void onVoicePacketReceived();
+    void onVoicePacketReceived(String sourceName);
 }

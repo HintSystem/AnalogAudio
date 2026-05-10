@@ -4,7 +4,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.Containers;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -35,6 +37,7 @@ import com.palm1.analogaudio.client.ClientHooks;
 import com.palm1.analogaudio.item.CassetteData;
 import com.palm1.analogaudio.registry.ModBlockEntities;
 import com.palm1.analogaudio.registry.ModDataComponents;
+import com.palm1.analogaudio.registry.ModItems;
 
 public class RadioBlock extends BaseEntityBlock {
     public static final MapCodec<RadioBlock> CODEC = simpleCodec(RadioBlock::new);
@@ -72,6 +75,26 @@ public class RadioBlock extends BaseEntityBlock {
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
         return CODEC;
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+            Player player, InteractionHand hand, BlockHitResult hit) {
+        if (level.getBlockEntity(pos) instanceof RadioBlockEntity radio) {
+            if (stack.is(ModItems.CASSETTE_TAPE.get()) && radio.getItem(0).isEmpty()) {
+                if (!level.isClientSide) {
+                    radio.setItem(0, stack.split(1));
+                }
+                return ItemInteractionResult.sidedSuccess(level.isClientSide);
+            }
+            if (stack.is(ModItems.CASSETTE_BAG.get()) && radio.getItem(1).isEmpty()) {
+                if (!level.isClientSide) {
+                    radio.setItem(1, stack.split(1));
+                }
+                return ItemInteractionResult.sidedSuccess(level.isClientSide);
+            }
+        }
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
     @Override

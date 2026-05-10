@@ -412,32 +412,23 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
 
     @Override
     public int[] getSlotsForFace(Direction side) {
-        if (side == Direction.UP) {
-            return new int[] { 0 };
-        } else if (side == Direction.DOWN) {
-            return new int[] { 0, 1 };
-        } else {
-            return new int[] { 1 };
-        }
+        return new int[] { 0, 1 };
     }
 
     @Override
     public boolean canPlaceItemThroughFace(int index, ItemStack stack, @Nullable Direction direction) {
         if (index == 0) {
-            return direction == Direction.UP && stack.is(ModItems.CASSETTE_TAPE.get());
+            return stack.is(ModItems.CASSETTE_TAPE.get());
         }
         if (index == 1) {
-            return direction != Direction.UP && direction != Direction.DOWN && stack.is(ModItems.CASSETTE_BAG.get());
+            return stack.is(ModItems.CASSETTE_BAG.get());
         }
         return false;
     }
 
     @Override
     public boolean canTakeItemThroughFace(int index, ItemStack stack, Direction direction) {
-        if (direction == Direction.DOWN) {
-            return !playing && pausedOffset == 0 && !looping;
-        }
-        return false;
+        return true;
     }
 
     private void updateAndSync() {

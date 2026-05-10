@@ -88,7 +88,8 @@ dependencies {
     compileOnly "de.maxhenkel.voicechat:voicechat-api:2.6.13"
 
     // Create (NeoForge 1.21.1)
-    compileOnly "com.simibubi.create:create-1.21.1:6.0.10-280:slim"
+    compileOnly "com.simibubi.create:create-1.21.1:6.0.10-280"
+    compileOnly "net.createmod.ponder:ponder-neoforge:1.0.82+mc1.21.1"
 
     // Sable / Simulated (NeoForge 1.21.1)
     compileOnly("dev.simulated_team.simulated:simulated-neoforge-1.21.1:1.0.3") {

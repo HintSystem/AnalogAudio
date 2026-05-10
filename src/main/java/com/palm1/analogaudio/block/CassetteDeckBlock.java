@@ -2,8 +2,11 @@ package com.palm1.analogaudio.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Containers;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
@@ -25,6 +28,7 @@ import net.minecraft.core.Direction;
 import com.mojang.serialization.MapCodec;
 
 import com.palm1.analogaudio.block.entity.CassetteDeckBlockEntity;
+import com.palm1.analogaudio.registry.ModItems;
 
 public class CassetteDeckBlock extends BaseEntityBlock {
     public static final MapCodec<CassetteDeckBlock> CODEC = simpleCodec(CassetteDeckBlock::new);
@@ -65,6 +69,20 @@ public class CassetteDeckBlock extends BaseEntityBlock {
     @Override
     protected MapCodec<? extends BaseEntityBlock> codec() {
         return CODEC;
+    }
+
+    @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+            Player player, InteractionHand hand, BlockHitResult hit) {
+        if (level.getBlockEntity(pos) instanceof CassetteDeckBlockEntity deck) {
+            if (stack.is(ModItems.CASSETTE_TAPE.get()) && deck.inventory.getItem(0).isEmpty()) {
+                if (!level.isClientSide) {
+                    deck.inventory.setItem(0, stack.split(1));
+                }
+                return ItemInteractionResult.sidedSuccess(level.isClientSide);
+            }
+        }
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
     @Override
