@@ -24,9 +24,7 @@ public class AnalogAudio {
         ModItems.ITEMS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModDataComponents.DATA_COMPONENTS.register(modEventBus);
-
         CreateCompat.init(modEventBus);
-
         ModMenus.MENUS.register(modEventBus);
         ModSounds.SOUNDS.register(modEventBus);
         ModCreativeTabs.CREATIVE_TABS.register(modEventBus);
@@ -38,6 +36,7 @@ public class AnalogAudio {
 
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(AnalogAudioNetwork::registerPayloads);
+        modEventBus.register(ModCapabilities.class);
 
         if (net.neoforged.fml.loading.FMLEnvironment.dist == net.neoforged.api.distmarker.Dist.CLIENT) {
             try {
