@@ -8,6 +8,7 @@ issueTrackerURL="https://github.com/palmmc/AnalogAudio/issues"
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
+mixins=["analogaudio.mixins.json"]
 logoFile="icon.png"
 authors="palm1"
 description='''
