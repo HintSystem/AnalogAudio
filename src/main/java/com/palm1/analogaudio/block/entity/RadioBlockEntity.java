@@ -440,8 +440,6 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
 
     @Override
     public boolean canTakeItemThroughFace(int index, ItemStack stack, Direction direction) {
-        // Grace period (10 ticks) to allow redstone signal to propagate and lock
-        // hoppers
         if (this.level != null && this.level.getGameTime() - this.insertTime < 10) {
             return false;
         }
@@ -460,8 +458,13 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
         BlockState state = getBlockState();
         if (state.hasProperty(RadioBlock.POWERED)) {
             boolean wasPowered = state.getValue(RadioBlock.POWERED);
-            if (wasPowered != playing) {
-                this.level.setBlock(getBlockPos(), state.setValue(RadioBlock.POWERED, playing), 3);
+            boolean hasRecord = state.hasProperty(RadioBlock.HAS_RECORD) && state.getValue(RadioBlock.HAS_RECORD);
+            if (wasPowered != playing || hasRecord != playing) {
+                BlockState newState = state.setValue(RadioBlock.POWERED, playing);
+                if (state.hasProperty(RadioBlock.HAS_RECORD)) {
+                    newState = newState.setValue(RadioBlock.HAS_RECORD, playing);
+                }
+                this.level.setBlock(getBlockPos(), newState, 3);
             }
         }
     }

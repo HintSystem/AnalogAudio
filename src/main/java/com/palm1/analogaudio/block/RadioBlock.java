@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -43,18 +44,20 @@ public class RadioBlock extends BaseEntityBlock {
     public static final MapCodec<RadioBlock> CODEC = simpleCodec(RadioBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
+    public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
 
     public RadioBlock(Properties properties) {
         super(properties);
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(FACING, Direction.NORTH)
-                .setValue(POWERED, false));
+                .setValue(POWERED, false)
+                .setValue(HAS_RECORD, false));
     }
 
     @Override
     protected void createBlockStateDefinition(
             StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, POWERED);
+        builder.add(FACING, POWERED, HAS_RECORD);
     }
 
     @Override
@@ -80,6 +83,10 @@ public class RadioBlock extends BaseEntityBlock {
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
             Player player, InteractionHand hand, BlockHitResult hit) {
+        if (stack.getItem().toString() == "create:mechanical_arm") {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
         if (level.getBlockEntity(pos) instanceof RadioBlockEntity radio) {
             if (stack.is(ModItems.CASSETTE_TAPE.get()) && radio.getItem(0).isEmpty()) {
                 if (!level.isClientSide) {
@@ -100,6 +107,11 @@ public class RadioBlock extends BaseEntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
             BlockHitResult hit) {
+        if (player.getMainHandItem().getItem().toString() == "create:mechanical_arm" ||
+                player.getOffhandItem().getItem().toString() == "create:mechanical_arm") {
+            return InteractionResult.PASS;
+        }
+
         if (!level.isClientSide()) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof RadioBlockEntity radio) {
@@ -112,6 +124,18 @@ public class RadioBlock extends BaseEntityBlock {
     @Override
     protected void neighborChanged(BlockState state, Level level, BlockPos pos,
             Block neighborBlock, BlockPos neighborPos, boolean movedByPiston) {
+        if (!level.isClientSide()) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof RadioBlockEntity radio) {
+                radio.setPowered(level.hasNeighborSignal(pos));
+            }
+        }
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state,
+            @Nullable net.minecraft.world.entity.LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
         if (!level.isClientSide()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof RadioBlockEntity radio) {
@@ -157,6 +181,12 @@ public class RadioBlock extends BaseEntityBlock {
 
                             lvl.addParticle(ParticleTypes.NOTE, x, y, z, colorOffset, 0, 0);
                         }
+                        // Check for parrots to get their freak on.
+                        AABB area = new AABB(pos).inflate(3.0D);
+                        for (net.minecraft.world.entity.animal.Parrot parrot : lvl
+                                .getEntitiesOfClass(net.minecraft.world.entity.animal.Parrot.class, area)) {
+                            parrot.setRecordPlayingNearby(pos, true);
+                        }
                         return;
                     }
                 }
@@ -171,6 +201,12 @@ public class RadioBlock extends BaseEntityBlock {
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
             if (level.isClientSide()) {
+                // Tell parrots to stop schmooving and grooving when radio is broken.
+                AABB area = new AABB(pos).inflate(3.46D);
+                for (net.minecraft.world.entity.animal.Parrot parrot : level
+                        .getEntitiesOfClass(net.minecraft.world.entity.animal.Parrot.class, area)) {
+                    parrot.setRecordPlayingNearby(pos, false);
+                }
                 ClientHooks.stopRadio(pos);
             } else {
                 BlockEntity blockEntity = level.getBlockEntity(pos);
