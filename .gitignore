@@ -29,15 +29,12 @@ bin/
 ### VS Code ###
 .vscode/
 
-### Mac OS ###
-.DS_Store
-
-### Minecraft Modding ###
+### Minecraft ###
 run/
 !**/src/**/run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
-INTEGRATION_LIBRARY
+INTEGRATION_REFERENCES
 /runs
 /libs

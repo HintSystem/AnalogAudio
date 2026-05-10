@@ -98,5 +98,8 @@
   "config.analogaudio.globalRadioRange": "Global Radio Range",
   "config.analogaudio.globalRadioRange.description": "Controls the maximum distance in blocks you can hear radio audio before it falls off.",
   "config.analogaudio.globalSpeakerRange": "Global Speaker Range",
-  "config.analogaudio.globalSpeakerRange.description": "Controls the maximum distance in blocks you can hear speaker audio before it falls off."
+  "config.analogaudio.globalSpeakerRange.description": "Controls the maximum distance in blocks you can hear speaker audio before it falls off.",
+  // Create Mod Translations
+  "analogaudio.display_source.radio": "Radio Track Info",
+  "analogaudio.display_source.speaker": "Speaker Sources Info"
 }

@@ -1,12 +1,25 @@
 package com.palm1.analogaudio.integration;
 
+import net.minecraft.world.level.block.Block;
 import net.neoforged.fml.ModList;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
+import com.palm1.analogaudio.AnalogAudio;
 import com.palm1.analogaudio.registry.ModBlocks;
 
 public class CreateCompat {
     public static void init(net.neoforged.bus.api.IEventBus modEventBus) {
         if (ModList.get().isLoaded("create")) {
             modEventBus.addListener(CreateCompat::onCommonSetup);
+            try {
+                Class.forName("com.palm1.analogaudio.integration.create.CreateDisplaySources")
+                        .getMethod("register", net.neoforged.bus.api.IEventBus.class)
+                        .invoke(null, modEventBus);
+            } catch (Exception e) {
+                AnalogAudio.LOGGER.error("Failed to register Create Display Sources", e);
+            }
         }
     }
 
@@ -15,16 +28,16 @@ public class CreateCompat {
             try {
                 Class<?> movementBehaviourClass = Class
                         .forName("com.simibubi.create.api.behaviour.movement.MovementBehaviour");
-                java.lang.reflect.Field registryField = movementBehaviourClass.getField("REGISTRY");
+                Field registryField = movementBehaviourClass.getField("REGISTRY");
                 Object registry = registryField.get(null);
-                java.lang.reflect.Method registerMethod = registry.getClass().getMethod("register",
-                        net.minecraft.world.level.block.Block.class, movementBehaviourClass);
+                Method addMethod = registry.getClass().getMethod("add",
+                        Block.class, movementBehaviourClass);
 
                 Object behavior = Class.forName("com.palm1.analogaudio.integration.create.RadioMovementBehaviour")
                         .getDeclaredConstructor().newInstance();
-                registerMethod.invoke(registry, ModBlocks.RADIO.get(), behavior);
+                addMethod.invoke(registry, ModBlocks.RADIO.get(), behavior);
             } catch (Exception e) {
-                com.palm1.analogaudio.AnalogAudio.LOGGER.error("Failed to register Create movement behavior", e);
+                AnalogAudio.LOGGER.error("Failed to register Create movement behavior", e);
             }
         });
     }

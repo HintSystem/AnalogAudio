@@ -178,9 +178,12 @@ public class SpeakerBlockEntity extends BlockEntity implements SpeakerInstance {
                 + this.worldPosition.toShortString().replace(" ", "");
     }
 
+    private final java.util.Map<String, Long> activeSources = new java.util.concurrent.ConcurrentHashMap<>();
+
     @Override
-    public void onVoicePacketReceived() {
+    public void onVoicePacketReceived(String sourceName) {
         if (this.level != null && !this.level.isClientSide) {
+            this.activeSources.put(sourceName, this.level.getGameTime());
             this.lastVoiceTime = this.level.getGameTime();
             BlockState state = getBlockState();
             if (state.hasProperty(SpeakerBlock.POWERED) && !state.getValue(SpeakerBlock.POWERED)) {
@@ -189,6 +192,21 @@ public class SpeakerBlockEntity extends BlockEntity implements SpeakerInstance {
                 this.level.scheduleTick(this.worldPosition, state.getBlock(), 10);
             }
         }
+    }
+
+    public java.util.List<String> getActiveSources() {
+        if (this.level == null)
+            return java.util.List.of();
+        long currentTime = this.level.getGameTime();
+        return this.activeSources.entrySet().stream()
+                .filter(e -> currentTime - e.getValue() < 40)
+                .map(java.util.Map.Entry::getKey)
+                .sorted()
+                .toList();
+    }
+
+    public String getActiveSourceNames() {
+        return String.join(", ", getActiveSources());
     }
 
     public long getLastVoiceTime() {
