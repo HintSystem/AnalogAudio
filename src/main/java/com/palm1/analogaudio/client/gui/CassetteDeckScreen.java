@@ -199,7 +199,7 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                                 String name = oldData != null ? oldData.name() : "";
                                 stack.set(ModDataComponents.CASSETTE_DATA.get(),
                                         new CassetteData(uuid, url, name, colorVal,
-                                                oldData != null ? oldData.volume() : 0.75f,
+                                                oldData != null ? oldData.volume() : -1.0f,
                                                 oldData != null ? oldData.duration() : 0L));
                             }
                         }) {
