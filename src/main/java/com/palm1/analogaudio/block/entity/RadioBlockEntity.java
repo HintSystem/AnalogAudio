@@ -596,7 +596,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
         ItemStack cassette = getCassette();
         if (!cassette.isEmpty() && cassette.has(ModDataComponents.CASSETTE_DATA.get())) {
             CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
-            if (data != null) {
+            if (data != null && data.volume() >= 0.0f) {
                 this.volume = data.volume();
             }
         }

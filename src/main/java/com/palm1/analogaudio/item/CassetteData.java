@@ -12,7 +12,7 @@ public record CassetteData(String uuid, String url, String name, int color, floa
                         Codec.STRING.fieldOf("url").forGetter(CassetteData::url),
                         Codec.STRING.fieldOf("name").forGetter(CassetteData::name),
                         Codec.INT.fieldOf("color").forGetter(CassetteData::color),
-                        Codec.FLOAT.optionalFieldOf("volume", 0.75f).forGetter(CassetteData::volume),
+                        Codec.FLOAT.optionalFieldOf("volume", -1.0f).forGetter(CassetteData::volume),
                         Codec.LONG.optionalFieldOf("duration", 0L).forGetter(CassetteData::duration)).apply(instance, CassetteData::new));
 
         public static final StreamCodec<RegistryFriendlyByteBuf, CassetteData> STREAM_CODEC = StreamCodec.composite(
