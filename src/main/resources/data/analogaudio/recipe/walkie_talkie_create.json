@@ -27,10 +27,10 @@
       "item": "minecraft:amethyst_shard"
     },
     "C": {
-      "item": "create:brass_sheet"
+      "item": "create:golden_sheet"
     },
     "D": {
-      "item": "create:rose_quartz"
+      "item": "minecraft:redstone"
     }
   },
   "result": {
