@@ -46,6 +46,18 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
     public static void serverTick(Level level, BlockPos pos, BlockState state,
             RadioBlockEntity entity) {
         if (level.getGameTime() % 20 == 0) {
+            if (entity.playing) {
+                ItemStack cassette = entity.getCassette();
+                if (!cassette.isEmpty()) {
+                    CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
+                    if (data != null && data.duration() > 0) {
+                        long elapsedTicks = level.getGameTime() - entity.startTime;
+                        if (elapsedTicks * 50 >= data.duration()) {
+                            entity.skipToNextTrack();
+                        }
+                    }
+                }
+            }
             int currentSignal = state.getAnalogOutputSignal(level, pos);
             if (currentSignal != entity.lastSignal) {
                 entity.lastSignal = currentSignal;
@@ -428,6 +440,11 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
 
     @Override
     public boolean canTakeItemThroughFace(int index, ItemStack stack, Direction direction) {
+        // Grace period (10 ticks) to allow redstone signal to propagate and lock
+        // hoppers
+        if (this.level != null && this.level.getGameTime() - this.insertTime < 10) {
+            return false;
+        }
         return true;
     }
 
