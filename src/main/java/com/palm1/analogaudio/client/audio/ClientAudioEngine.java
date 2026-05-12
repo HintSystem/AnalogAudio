@@ -3,10 +3,9 @@ package com.palm1.analogaudio.client.audio;
 import com.palm1.analogaudio.AnalogAudio;
 import com.palm1.analogaudio.client.audio.api.IRadioStreamer;
 import com.palm1.analogaudio.client.audio.lavaplayer.LavaplayerLoader;
-import com.palm1.analogaudio.client.ClientHooks;
+import com.palm1.analogaudio.integration.SableCompat;
 import com.palm1.analogaudio.item.CassetteData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -98,8 +97,8 @@ public class ClientAudioEngine {
             Vec3 pPos = Minecraft.getInstance().player.position();
             Level level = Minecraft.getInstance().level;
 
-            Vec3 globalPos = com.palm1.analogaudio.integration.SableCompat.getGlobalPos(level, pos);
-            Vec3 velocity = com.palm1.analogaudio.integration.SableCompat.getVelocity(level, pos);
+            Vec3 globalPos = SableCompat.getGlobalPos(level, pos);
+            Vec3 velocity = SableCompat.getVelocity(level, pos);
 
             streamer.updatePosition(globalPos.x, globalPos.y, globalPos.z, pPos.x, pPos.y, pPos.z, velocity.x,
                     velocity.y, velocity.z);
@@ -133,31 +132,5 @@ public class ClientAudioEngine {
 
     public static void prepareForSession() {
         active = true;
-    }
-
-    private static void displayActionBarProgress(float progress) {
-        if (Minecraft.getInstance().player == null)
-            return;
-
-        int totalBars = 36;
-        int completedBars = (int) (progress * totalBars);
-
-        Component downloading = Component.translatable("gui.analogaudio.cassette_deck.status.downloading");
-
-        StringBuilder bar = new StringBuilder();
-        for (int i = 0; i < completedBars; i++)
-            bar.append("|");
-        String completed = bar.toString();
-
-        bar = new StringBuilder();
-        for (int i = completedBars; i < totalBars; i++)
-            bar.append("|");
-        String remaining = bar.toString();
-
-        Minecraft.getInstance().player.displayClientMessage(
-                Component.literal("§f").append(downloading).append(" §r[§a")
-                        .append(completed).append("§7")
-                        .append(remaining).append("§r]"),
-                true);
     }
 }

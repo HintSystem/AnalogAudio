@@ -1,4 +1,4 @@
-package com.palm1.analogaudio.client.integration.voicechat;
+package com.palm1.analogaudio.client.audio;
 
 import java.util.Random;
 

@@ -43,6 +43,9 @@ repositories {
         name 'Xander Maven'
         url 'https://maven.isxander.dev/releases'
     }
+    maven {
+        url "https://repo.plasmoverse.com/releases"
+    }
 }
 
 base {
@@ -86,6 +89,11 @@ dependencies {
 
     // Simple Voice Chat API
     compileOnly "de.maxhenkel.voicechat:voicechat-api:2.6.13"
+
+    // Plasmo Voice API
+    compileOnly "su.plo.voice.api:client:2.1.8"
+    compileOnly "su.plo.voice.api:server:2.1.8"
+    compileOnly "su.plo.voice.api:common:2.1.8"
 
     // Create (NeoForge 1.21.1)
     compileOnly "com.simibubi.create:create-1.21.1:6.0.10-280"
