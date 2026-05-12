@@ -19,6 +19,7 @@ import com.mojang.math.Axis;
 import org.joml.Matrix4f;
 
 import com.palm1.analogaudio.AnalogAudio;
+import com.palm1.analogaudio.integration.plasmovoice.PlasmoVoiceApiHandle;
 import com.palm1.analogaudio.integration.voicechat.VoicechatApiHandle;
 import com.palm1.analogaudio.registry.ModDataComponents;
 import com.palm1.analogaudio.registry.ModSounds;
@@ -89,11 +90,21 @@ public class WalkieTalkieRenderer extends BlockEntityWithoutLevelRenderer {
         boolean usingFallback = false;
 
         var clientApiOpt = VoicechatApiHandle.getClientApi();
+        var plasmoApiOpt = PlasmoVoiceApiHandle.getClientApi();
+
         if (clientApiOpt.isPresent()) {
             var clientApi = clientApiOpt.get();
             pttActive = clientApi.isPushToTalkKeyPressed();
             isMuted = clientApi.isMuted();
             isTalking = clientApi.isTalking();
+        } else if (plasmoApiOpt.isPresent()) {
+            var plasmoApi = plasmoApiOpt.get();
+            var activation = plasmoApi.getActivationManager().getParentActivation().orElse(null);
+            if (activation != null) {
+                pttActive = activation.getPttKey().isPressed();
+                isTalking = activation.isActive();
+            }
+            isMuted = plasmoApi.getConfig().getVoice().getMicrophoneDisabled().value();
         } else {
             usingFallback = true;
             try {
@@ -136,8 +147,15 @@ public class WalkieTalkieRenderer extends BlockEntityWithoutLevelRenderer {
             if (dt > 0) {
                 boolean physicalPtt = false;
                 var apiOpt = VoicechatApiHandle.getClientApi();
+                var pvApiOpt = com.palm1.analogaudio.integration.plasmovoice.PlasmoVoiceApiHandle.getClientApi();
+
                 if (apiOpt.isPresent()) {
                     physicalPtt = apiOpt.get().isPushToTalkKeyPressed();
+                } else if (pvApiOpt.isPresent()) {
+                    var activation = pvApiOpt.get().getActivationManager().getParentActivation().orElse(null);
+                    if (activation != null) {
+                        physicalPtt = activation.getPttKey().isPressed();
+                    }
                 } else {
                     try {
                         physicalPtt = getPttFallback();

@@ -11,6 +11,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import org.slf4j.Logger;
+import su.plo.voice.api.server.PlasmoVoiceServer;
 
 @Mod(AnalogAudio.MODID)
 public class AnalogAudio {
@@ -31,7 +32,17 @@ public class AnalogAudio {
         ModRecipeSerializers.SERIALIZERS.register(modEventBus);
 
         if (net.neoforged.fml.ModList.get().isLoaded("voicechat")) {
-            LOGGER.info("Integrating voice chat.");
+            LOGGER.info("Activating integration with Simple Voice Chat.");
+        }
+
+        if (net.neoforged.fml.ModList.get().isLoaded("plasmovoice")) {
+            LOGGER.info("Activating integration with Plasmo Voice.");
+            try {
+                PlasmoVoiceServer.getAddonsLoader()
+                        .load(new com.palm1.analogaudio.integration.plasmovoice.AnalogAudioPlasmoVoiceAddon());
+            } catch (Exception e) {
+                LOGGER.error("Failed to load Plasmo Voice addon", e);
+            }
         }
 
         modEventBus.addListener(this::commonSetup);
@@ -52,7 +63,10 @@ public class AnalogAudio {
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(com.palm1.analogaudio.integration.SableCompat::init);
         if (net.neoforged.fml.ModList.get().isLoaded("voicechat")) {
-            LOGGER.info("Successfully integrated voice chat!");
+            LOGGER.info("Successfully integrated with Simple Voice Chat!");
+        }
+        if (net.neoforged.fml.ModList.get().isLoaded("plasmovoice")) {
+            LOGGER.info("Successfully integrated with Plasmo Voice!");
         }
     }
 }

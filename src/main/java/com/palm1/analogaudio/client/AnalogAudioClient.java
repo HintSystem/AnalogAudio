@@ -52,10 +52,19 @@ public class AnalogAudioClient {
         AnalogAudioNetwork.writeResultHandler = ClientPacketHandlers::handleWriteResult;
         AnalogAudioNetwork.radioSignalHandler = ClientPacketHandlers::handleRadioSignal;
 
-        if (ModList.get().isLoaded("voicechat")) {
+        if (ModList.get().isLoaded("voicechat") || ModList.get().isLoaded("plasmovoice")) {
             modEventBus.addListener(VoicechatClientHooks::registerRenderers);
             modEventBus.addListener(VoicechatClientHooks::registerClientExtensions);
             modEventBus.addListener(VoicechatClientHooks::registerAdditionalModels);
+        }
+
+        if (ModList.get().isLoaded("plasmovoice")) {
+            try {
+                su.plo.voice.api.client.PlasmoVoiceClient.getAddonsLoader()
+                        .load(new com.palm1.analogaudio.integration.plasmovoice.AnalogAudioPlasmoVoiceClientAddon());
+            } catch (Exception e) {
+                com.palm1.analogaudio.AnalogAudio.LOGGER.error("Failed to load Plasmo Voice clientaddon", e);
+            }
         }
     }
 

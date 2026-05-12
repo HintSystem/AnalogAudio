@@ -18,12 +18,19 @@ public class ModBlockEntities {
 
         public static final Supplier<BlockEntityType<CassetteDeckBlockEntity>> CASSETTE_DECK = BLOCK_ENTITIES
                         .register("cassette_deck",
-                                         () -> BlockEntityType.Builder.of(CassetteDeckBlockEntity::new, ModBlocks.CASSETTE_DECK.get()).build(null));
+                                        () -> BlockEntityType.Builder
+                                                        .of(CassetteDeckBlockEntity::new, ModBlocks.CASSETTE_DECK.get())
+                                                        .build(null));
 
         public static final Supplier<BlockEntityType<RadioBlockEntity>> RADIO = BLOCK_ENTITIES.register("radio",
                         () -> BlockEntityType.Builder.of(RadioBlockEntity::new, ModBlocks.RADIO.get()).build(null));
 
-        public static final Supplier<BlockEntityType<SpeakerBlockEntity>> SPEAKER = ModList.get().isLoaded("voicechat") ? BLOCK_ENTITIES
-                        .register("speaker",
-                                         () -> BlockEntityType.Builder.of(SpeakerBlockEntity::new, ModBlocks.SPEAKER.get()).build(null)) : null;
+        public static final Supplier<BlockEntityType<SpeakerBlockEntity>> SPEAKER = (ModList.get().isLoaded("voicechat")
+                        || ModList.get().isLoaded("plasmovoice")) ? BLOCK_ENTITIES
+                                        .register("speaker",
+                                                        () -> BlockEntityType.Builder
+                                                                        .of(SpeakerBlockEntity::new,
+                                                                                        ModBlocks.SPEAKER.get())
+                                                                        .build(null))
+                                        : null;
 }

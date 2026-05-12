@@ -16,7 +16,7 @@ import com.palm1.analogaudio.AnalogAudio;
 public class AnalogAudioVoicechatPlugin implements VoicechatPlugin {
 
     public AnalogAudioVoicechatPlugin() {
-        AnalogAudio.LOGGER.info("Voicechat Plugin INSTANCE CREATED.");
+        AnalogAudio.LOGGER.info("VC Plugin instance created.");
     }
 
     @Override
@@ -44,13 +44,13 @@ public class AnalogAudioVoicechatPlugin implements VoicechatPlugin {
             com.palm1.analogaudio.client.integration.voicechat.ClientAudioProcessor.registerEvents(registration);
         }
 
-        AnalogAudio.LOGGER.info("Registered unified Voicechat Events.");
+        AnalogAudio.LOGGER.info("Registered vc events.");
     }
 
     private void onServerStarted(VoicechatServerStartedEvent event) {
         VoicechatServerApi serverApi = event.getVoicechat();
         VoicechatApiHandle.setServerApi(serverApi);
-        AnalogAudio.LOGGER.info("Bound Voicechat Server API from Startup Event.");
+        AnalogAudio.LOGGER.info("Bound Voicechat Server API.");
 
         VolumeCategory walkie = serverApi.volumeCategoryBuilder()
                 .setId("walkie_talkies")
@@ -69,7 +69,5 @@ public class AnalogAudioVoicechatPlugin implements VoicechatPlugin {
                 .setDescriptionTranslationKey("voicechat.category.speaker_blocks.description")
                 .build();
         serverApi.registerVolumeCategory(speaker);
-
-        AnalogAudio.LOGGER.info("AnalogAudio: Registered Voicechat Volume Categories with Safe Icons.");
     }
 }
