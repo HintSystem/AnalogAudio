@@ -106,6 +106,9 @@ dependencies {
 
     implementation "dev.isxander:yet-another-config-lib:${yacl_version}-neoforge"
     jarJar "dev.isxander:yet-another-config-lib:${yacl_version}-neoforge"
+
+    // Sound Physics Remastered
+    compileOnly "maven.modrinth:sound-physics-remastered:neoforge-1.21.1-1.5.1"
 }
 
 tasks.withType(ProcessResources).configureEach {

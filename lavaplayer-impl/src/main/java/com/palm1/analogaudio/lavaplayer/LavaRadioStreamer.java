@@ -2,6 +2,7 @@ package com.palm1.analogaudio.lavaplayer;
 
 import com.palm1.analogaudio.client.audio.api.IRadioStreamer;
 import com.palm1.analogaudio.config.ModConfig;
+import com.palm1.analogaudio.integration.SoundPhysicsIntegration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -42,6 +43,7 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
     private boolean playing = false;
     private boolean looping = false;
     private float volume = 1.0f;
+    @SuppressWarnings("unused")
     private double lastX, lastY, lastZ;
     private Runnable trackEndCallback;
 
@@ -93,13 +95,24 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
             float interpZ = (float) (pZ + (z - pZ) * threshold);
 
             AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_FALSE);
-            AL10.alSource3f(sourceId, AL10.AL_POSITION, interpX, interpY, interpZ);
+
+            try {
+                double[] shiftedPos = SoundPhysicsIntegration.processSound(sourceId, interpX, interpY, interpZ,
+                        "BLOCKS", "analogaudio", "radio", false);
+                if (shiftedPos != null) {
+                    AL10.alSource3f(sourceId, AL10.AL_POSITION, (float) shiftedPos[0], (float) shiftedPos[1],
+                            (float) shiftedPos[2]);
+                } else {
+                    AL10.alSource3f(sourceId, AL10.AL_POSITION, interpX, interpY, interpZ);
+                }
+            } catch (Throwable t) {
+                t.printStackTrace();
+                AL10.alSource3f(sourceId, AL10.AL_POSITION, interpX, interpY, interpZ);
+            }
+
             AL10.alSource3f(sourceId, AL11.AL_VELOCITY, (float) vX, (float) vY, (float) vZ);
         }
         AL10.alSourcef(sourceId, AL10.AL_PITCH, 1.0f);
-        AL10.alSourcef(sourceId, AL10.AL_ROLLOFF_FACTOR, 0.0f);
-        AL10.alSourcef(sourceId, AL10.AL_REFERENCE_DISTANCE, 0.0f);
-
         streamAudio();
     }
 
