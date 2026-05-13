@@ -42,6 +42,8 @@ public class AnalogAudioVoicechatPlugin implements VoicechatPlugin {
         // Client Events
         if (net.neoforged.fml.loading.FMLEnvironment.dist == net.neoforged.api.distmarker.Dist.CLIENT) {
             com.palm1.analogaudio.client.integration.voicechat.ClientAudioProcessor.registerEvents(registration);
+            registration.registerEvent(de.maxhenkel.voicechat.api.events.OpenALSoundEvent.class,
+                    com.palm1.analogaudio.client.integration.soundphysics.SoundPhysicsVoiceIntegration::onOpenALSound);
         }
 
         AnalogAudio.LOGGER.info("Registered vc events.");
