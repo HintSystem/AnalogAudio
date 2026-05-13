@@ -46,7 +46,14 @@
   "gui.analogaudio.radio.off": "OFF",
   // Tooltip Translations
   "tooltip.analogaudio.walkie_talkie.frequency": "Frequency: %s",
+  "tooltip.analogaudio.description.walkie_talkie": "Transmits voice input to other devices on the same frequency.\n\nHold %s to change frequency.",
   "tooltip.analogaudio.cassette_bag.count": "Contains %s cassettes",
+  "tooltip.analogaudio.description.cassette_bag": "A bag that can store multiple cassette tapes.",
+  "tooltip.analogaudio.description.cassette_tape": "Stores audio that can be played by a Radio.",
+  "tooltip.analogaudio.description.radio": "Plays music from cassette tapes.",
+  "tooltip.analogaudio.description.speaker": "Broadcasts audio from walkie talkies.",
+  "tooltip.analogaudio.description.cassette_deck": "Used to write and erase cassette tapes.",
+  "tooltip.analogaudio.view_tooltip_description": "Hold %s for info.",
   // Creative Category Translations
   "itemGroup.analogaudio.analog_audio_tab": "Analog Audio",
   // Voice Chat Category Translations

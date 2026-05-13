@@ -8,6 +8,9 @@ import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.fml.ModList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item.TooltipContext;
 
 public class ModItems {
         public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(AnalogAudio.MODID);
