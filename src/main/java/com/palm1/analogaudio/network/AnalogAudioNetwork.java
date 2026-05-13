@@ -29,9 +29,11 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.fml.common.EventBusSubscriber;
 
 import com.palm1.analogaudio.util.AudioUploader;
+import com.palm1.analogaudio.util.ModPermissions;
+import net.minecraft.server.level.ServerPlayer;
 import java.util.function.BiConsumer;
 
-@EventBusSubscriber(modid = "analogaudio", bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = "analogaudio")
 public class AnalogAudioNetwork {
     public static BiConsumer<WriteResultS2CPacket, IPayloadContext> writeResultHandler = (d, c) -> {
     };
@@ -88,15 +90,19 @@ public class AnalogAudioNetwork {
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-            PacketDistributor.sendToPlayer(serverPlayer, new SyncConfigS2CPacket(
-                    ModConfig.Server.whitelistedUrls,
-                    ModConfig.Server.whitelistAsBlacklist,
-                    ModConfig.Server.enableWalkieFiltering,
-                    ModConfig.Server.allowFileUploads,
-                    ModConfig.Server.globalRadioRange,
-                    ModConfig.Server.globalSpeakerRange));
+        if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+            syncConfig(serverPlayer);
         }
+    }
+
+    public static void syncConfig(ServerPlayer player) {
+        PacketDistributor.sendToPlayer(player, new SyncConfigS2CPacket(
+                ModConfig.Server.whitelistedUrls,
+                ModConfig.Server.whitelistAsBlacklist,
+                ModConfig.Server.enableWalkieFiltering,
+                ModPermissions.canUploadFiles(player),
+                ModConfig.Server.globalRadioRange,
+                ModConfig.Server.globalSpeakerRange));
     }
 
     private static void handleNextTrack(final NextTrackC2SPacket data, final IPayloadContext context) {
@@ -112,7 +118,7 @@ public class AnalogAudioNetwork {
         context.enqueueWork(() -> {
             Player player = context.player();
 
-            if (!data.url().isEmpty() && !isValidUrl(data.url())) {
+            if (!data.url().isEmpty() && !isValidUrl(data.url(), player)) {
                 context.reply(new WriteResultS2CPacket(4));
                 return;
             }
@@ -139,7 +145,7 @@ public class AnalogAudioNetwork {
         });
     }
 
-    private static boolean isValidUrl(String url) {
+    private static boolean isValidUrl(String url, Player player) {
         if (!(url.startsWith("http://") || url.startsWith("https://"))) {
             return false;
         }
@@ -147,9 +153,11 @@ public class AnalogAudioNetwork {
         try {
             String host = java.net.URI.create(url).toURL().getHost().toLowerCase();
 
-            if (ModConfig.Server.allowFileUploads
-                    && (host.equals(AudioUploader.FILE_HOST_URL) || host.endsWith("." + AudioUploader.FILE_HOST_URL))) {
-                return true;
+            if (host.equals(AudioUploader.FILE_HOST_URL) || host.endsWith("." + AudioUploader.FILE_HOST_URL)) {
+                if (ModConfig.Server.allowFileUploads) {
+                    return true;
+                }
+                return player instanceof ServerPlayer sp && ModPermissions.canUploadFiles(sp);
             }
 
             java.util.List<String> domains = ModConfig.Server.whitelistedUrls;

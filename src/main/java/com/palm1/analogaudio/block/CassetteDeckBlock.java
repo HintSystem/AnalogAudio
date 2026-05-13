@@ -24,10 +24,12 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
 
 import com.mojang.serialization.MapCodec;
 
 import com.palm1.analogaudio.block.entity.CassetteDeckBlockEntity;
+import com.palm1.analogaudio.network.AnalogAudioNetwork;
 import com.palm1.analogaudio.registry.ModItems;
 
 public class CassetteDeckBlock extends BaseEntityBlock {
@@ -91,6 +93,9 @@ public class CassetteDeckBlock extends BaseEntityBlock {
         if (!level.isClientSide()) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof CassetteDeckBlockEntity deck) {
+                if (player instanceof ServerPlayer sp) {
+                    AnalogAudioNetwork.syncConfig(sp);
+                }
                 player.openMenu(deck, pos);
             }
         }
