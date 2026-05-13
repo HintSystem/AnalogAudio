@@ -75,6 +75,7 @@ color = colors.get(release_type, 3447003)
 changelog_truncated = changelog[:2000] + ("..." if len(changelog) > 2000 else "")
 
 payload = {
+    "content": "<@&1503482388288639017>",
     "username": f"Modrinth Release",
     "avatar_url": "https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/publication/logo/a49f8e1b-3835-4ea1-a85b-118c6425ebc3/Modrinth_Dark_Logo.png",
     "embeds": [{
