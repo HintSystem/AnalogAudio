@@ -316,8 +316,13 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
             if (!cassetteStack.isEmpty()) {
                 if (!looping) {
                     this.playing = false;
+                    CassetteData data = cassetteStack.get(ModDataComponents.CASSETTE_DATA.get());
+                    if (data != null) {
+                        this.pausedOffset = data.duration() / 50;
+                    } else {
+                        this.pausedOffset = 0;
+                    }
                     this.startTime = 0;
-                    this.pausedOffset = 0;
                     updatePowerState();
                     updateComparator();
                     updateAndSync();
@@ -575,6 +580,17 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
     public boolean hasData() {
         ItemStack currentCassette = getCassette();
         return !currentCassette.isEmpty() && currentCassette.has(ModDataComponents.CASSETTE_DATA.get());
+    }
+
+    public long getCurrentPositionMs() {
+        if (level == null)
+            return 0;
+        if (playing) {
+            long elapsedTicks = level.getGameTime() - startTime;
+            return elapsedTicks * 50;
+        } else {
+            return pausedOffset * 50;
+        }
     }
 
     @Override

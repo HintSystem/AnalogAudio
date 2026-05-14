@@ -10,7 +10,6 @@ import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
@@ -232,19 +231,21 @@ public class RadioBlock extends BaseEntityBlock {
     @Override
     protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
         if (level.getBlockEntity(pos) instanceof RadioBlockEntity radio) {
-            if (!radio.isPlaying()) {
+            ItemStack cassette = radio.getCassette();
+            if (cassette.isEmpty()) {
                 return 0;
             }
 
-            ItemStack cassette = radio.getCassette();
-            if (!cassette.isEmpty()) {
-                CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
-                if (data != null && data.duration() > 0) {
-                    long elapsedTicks = level.getGameTime() - radio.getStartTime();
-                    long elapsedMs = elapsedTicks * 50;
-                    float progress = (float) elapsedMs / (float) data.duration();
-                    return Math.max(1, Math.min(15, (int) (progress * 15)));
-                }
+            if (!radio.isPlaying()) {
+                return 15;
+            }
+
+            CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
+            if (data != null && data.duration() > 0) {
+                long elapsedTicks = level.getGameTime() - radio.getStartTime();
+                long elapsedMs = elapsedTicks * 50;
+                float progress = (float) elapsedMs / (float) data.duration();
+                return Math.max(1, Math.min(15, (int) (progress * 15)));
             }
             return 15;
         }

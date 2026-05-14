@@ -23,11 +23,11 @@ public class RadioDisplaySource extends SingleLineDisplaySource {
             CassetteData data = cassette.get(ModDataComponents.CASSETTE_DATA.get());
             String name = data != null ? data.name() : cassette.getHoverName().getString();
 
-            if (data != null && data.duration() > 0 && radio.isPlaying()) {
-                long elapsedTicks = context.level().getGameTime() - radio.getStartTime();
-                long elapsedMs = elapsedTicks * 50;
+            if (data != null && data.duration() > 0) {
+                long currentMs = radio.getCurrentPositionMs();
+                currentMs = Math.min(currentMs, data.duration());
 
-                String current = formatTime(elapsedMs);
+                String current = formatTime(currentMs);
                 String total = formatTime(data.duration());
 
                 return Component.literal(name + " - (" + current + "/" + total + ")");
