@@ -85,7 +85,7 @@ public class ModConfigScreen {
                                                                 .binding(1.0f, () -> ModConfig.Client.globalRadioVolume,
                                                                                 val -> ModConfig.Client.globalRadioVolume = val)
                                                                 .controller(opt -> FloatSliderControllerBuilder
-                                                                                .create(opt).range(0.0f, 1.0f)
+                                                                                .create(opt).range(0.0f, 2.0f)
                                                                                 .step(0.01f)
                                                                                 .formatValue(v -> Component.literal(
                                                                                                 (int) (v * 100) + "%")))
