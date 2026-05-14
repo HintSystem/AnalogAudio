@@ -51,6 +51,9 @@ public class SpeakerBlockRenderer implements BlockEntityRenderer<SpeakerBlockEnt
                 Direction facing = blockEntity.getActiveSide();
                 poseStack.translate(0.5f, 0.5f, 0.5f);
                 poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
+                if (currentScale != 1.0f) {
+                        poseStack.scale(currentScale, currentScale, currentScale);
+                }
                 poseStack.translate(0.0f, 0.0f, 0.51f);
                 float textScale = 0.05f;
                 poseStack.scale(textScale, -textScale, textScale);
