@@ -78,6 +78,17 @@ public class ClientAudioEngine {
                                 .sendToServer(new com.palm1.analogaudio.network.packet.NextTrackC2SPacket(bPos));
                     });
                 }
+                newStreamer.setOnError(msg -> {
+                    Minecraft mc = Minecraft.getInstance();
+                    mc.execute(() -> {
+                        if (mc.player != null) {
+                            mc.player.displayClientMessage(
+                                    net.minecraft.network.chat.Component.literal(msg)
+                                            .withStyle(net.minecraft.ChatFormatting.RED),
+                                    true);
+                        }
+                    });
+                });
                 newStreamer.start();
 
                 long currentTick = Minecraft.getInstance().level.getGameTime();
