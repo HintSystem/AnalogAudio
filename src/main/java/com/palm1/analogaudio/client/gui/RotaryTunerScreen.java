@@ -26,7 +26,6 @@ public class RotaryTunerScreen extends Screen {
     private final Consumer<Integer> frequencySaver;
     private int frequency;
 
-    // Restore original constants
     private static final float POINTER_ANGLE = 214.0f;
     private static final float START_ANGLE = 214.0f;
     private static final float STEP_ANGLE = 28.5f;
@@ -48,13 +47,11 @@ public class RotaryTunerScreen extends Screen {
     private int resetTimer = 0;
     private boolean isResetting = false;
 
-    // Scroll helpers (Persistent)
     private static boolean scrollMode = false;
     private long lastScrollMillis = 0;
     private double scrollAccumulator = 0;
     private int scrollCooldown = 0;
 
-    // Tracker to prevent sub-pixel jitter
     private int lastMouseX = -1;
     private int lastMouseY = -1;
     private boolean switchKeyWasDown = false;
@@ -79,8 +76,7 @@ public class RotaryTunerScreen extends Screen {
 
         int holeIdx = (freq - 1) % 9;
         float nativeHoleAngle = START_ANGLE + holeIdx * STEP_ANGLE;
-        
-        // If in scroll mode, the active hole is always at the pointer
+
         if (scrollMode) {
             nativeHoleAngle = POINTER_ANGLE;
         }
@@ -88,7 +84,7 @@ public class RotaryTunerScreen extends Screen {
         double rad = Math.toRadians(nativeHoleAngle - 90);
         float hX = (float) (Math.cos(rad) * HOLE_RADIUS);
         float hY = (float) (Math.sin(rad) * HOLE_RADIUS);
-        
+
         setCursor(new Vec2(centerX + hX, centerY + hY));
         this.lastMouseX = (int) (centerX + hX);
         this.lastMouseY = (int) (centerY + hY);
@@ -183,11 +179,13 @@ public class RotaryTunerScreen extends Screen {
         if (scrollMode) {
             Component scroll = Component.translatable("gui.analogaudio.rotary_tuner.scroll")
                     .withStyle(s -> s.withColor(yellow));
-            
+
             Component scrollPrefix = Component.literal("Scroll ").withStyle(s -> s.withColor(gray));
-            Component up = scrollPrefix.copy().append(Component.translatable("gui.analogaudio.rotary_tuner.up").withStyle(s -> s.withColor(red)));
-            Component down = scrollPrefix.copy().append(Component.translatable("gui.analogaudio.rotary_tuner.down").withStyle(s -> s.withColor(red)));
-            
+            Component up = scrollPrefix.copy()
+                    .append(Component.translatable("gui.analogaudio.rotary_tuner.up").withStyle(s -> s.withColor(red)));
+            Component down = scrollPrefix.copy().append(
+                    Component.translatable("gui.analogaudio.rotary_tuner.down").withStyle(s -> s.withColor(red)));
+
             Component middle = minecraft.options.keyPickItem.getTranslatedKeyMessage().copy()
                     .withStyle(s -> s.withColor(red));
 
@@ -210,7 +208,8 @@ public class RotaryTunerScreen extends Screen {
         } else {
             Component drag = Component.translatable("gui.analogaudio.rotary_tuner.drag")
                     .withStyle(s -> s.withColor(yellow));
-            Component left = Component.translatable("gui.analogaudio.rotary_tuner.left").withStyle(s -> s.withColor(red));
+            Component left = Component.translatable("gui.analogaudio.rotary_tuner.left")
+                    .withStyle(s -> s.withColor(red));
             Component right = Component.translatable("gui.analogaudio.rotary_tuner.right")
                     .withStyle(s -> s.withColor(red));
             Component middle = Component.translatable("gui.analogaudio.rotary_tuner.middle")
@@ -234,9 +233,8 @@ public class RotaryTunerScreen extends Screen {
                     startX, startY + 33, gray);
         }
 
-        // New instruction line with a space below
         Component switchKey = ModKeyMappings.SWITCH_INPUT_MODE.getTranslatedKeyMessage().copy()
-                .withStyle(s -> s.withColor(0xFFFFAA00)); // Orange
+                .withStyle(s -> s.withColor(0xFFFFAA00));
         int white = (alpha << 24) | 0xFFFFFF;
 
         Component switchInstruction = Component.translatable("gui.analogaudio.rotary_tuner.instruction.switch_mode",
@@ -278,7 +276,8 @@ public class RotaryTunerScreen extends Screen {
         if (dist < 120) {
             this.isResetting = false;
             double angle = Math.toDegrees(Math.atan2(dy, dx)) + 90;
-            if (angle < 0) angle += 360;
+            if (angle < 0)
+                angle += 360;
 
             int page = (this.frequency - 1) / 9;
             int bestFreq = this.frequency;
@@ -298,9 +297,9 @@ public class RotaryTunerScreen extends Screen {
                 float bestD = Float.MAX_VALUE;
                 for (int i = 1; i <= 9; i++) {
                     int val = page * 9 + i;
-                    if (val > MAX_FREQUENCY) continue;
+                    if (val > MAX_FREQUENCY)
+                        continue;
 
-                    // ORIGINAL HOLE DETECTION (No rotation in math)
                     float nativeHoleAngle = START_ANGLE + (i - 1) * STEP_ANGLE;
                     float diff = Math.abs(Mth.degreesDifference(nativeHoleAngle, (float) angle));
                     if (diff < bestD) {
@@ -313,13 +312,10 @@ public class RotaryTunerScreen extends Screen {
             if (bestFreq != this.frequency) {
                 this.frequency = bestFreq;
                 this.targetRotation = getAngleForFrequency(this.frequency);
-                
-                // USER REQUEST: Do not move mouse during normal mode switching
-                // setCursorToFreq(this.frequency); 
-
                 if (soundCoolDown == 0) {
                     float pitch = 0.5f + ((this.frequency % 9) / 9f);
-                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_TICK.get(), pitch, 1.0F));
+                    minecraft.getSoundManager()
+                            .play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_TICK.get(), pitch, 1.0F));
                     soundCoolDown = 2;
                 }
             }
@@ -332,10 +328,11 @@ public class RotaryTunerScreen extends Screen {
     @Override
     public void tick() {
         ticksOpen++;
-        if (soundCoolDown > 0) soundCoolDown--;
-        if (scrollCooldown > 0) scrollCooldown--;
+        if (soundCoolDown > 0)
+            soundCoolDown--;
+        if (scrollCooldown > 0)
+            scrollCooldown--;
 
-        // Robust key detection (bypasses conflict blocking)
         InputConstants.Key switchKey = ModKeyMappings.SWITCH_INPUT_MODE.getKey();
         long window = minecraft.getWindow().getWindow();
         boolean isDown = false;
@@ -347,16 +344,12 @@ public class RotaryTunerScreen extends Screen {
 
         if (isDown && !switchKeyWasDown) {
             scrollMode = !scrollMode;
-            
-            // Re-trigger the startup grace period to allow cursor to move physically
             this.ticksOpen = 0;
-            
-            // Clear any active state to prevent "bleed" between modes
             this.holdDirection = 0;
             this.holdTimer = 0;
             this.isResetting = false;
             this.resetTimer = 0;
-            
+
             setCursorToFreq(this.frequency);
             minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_TICK.get(), 1.0F, 1.0F));
         }
@@ -376,7 +369,8 @@ public class RotaryTunerScreen extends Screen {
                     }
                     this.targetRotation = getAngleForFrequency(this.frequency);
                     setCursorToFreq(this.frequency);
-                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_SELECT.get(), 1.2F, 1.0F));
+                    minecraft.getSoundManager()
+                            .play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_SELECT.get(), 1.2F, 1.0F));
                     this.holdTimer = 0;
                 }
             }
@@ -390,7 +384,8 @@ public class RotaryTunerScreen extends Screen {
                 this.frequency = 1;
                 this.targetRotation = getAngleForFrequency(1);
                 setCursorToFreq(1);
-                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_SELECT.get(), 0.8F, 1.0F));
+                minecraft.getSoundManager()
+                        .play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_SELECT.get(), 0.8F, 1.0F));
                 this.resetTimer = 0;
                 this.isResetting = false;
             }
@@ -428,7 +423,8 @@ public class RotaryTunerScreen extends Screen {
                 this.scrollCooldown = 10;
 
                 float pitch = 0.5f + ((this.frequency % 9) / 9f);
-                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_TICK.get(), pitch, 1.0F));
+                minecraft.getSoundManager()
+                        .play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_TICK.get(), pitch, 1.0F));
             }
         }
         return true;
