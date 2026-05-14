@@ -1,7 +1,7 @@
 {
 	"format_version": "1.9.0",
-	"parent": "minecraft:builtin/entity",
 	"credit": "Made with Blockbench",
+	"parent": "minecraft:builtin/entity",
 	"textures": {
 		"0": "analogaudio:item/walkie_talkie/walkie_talkie",
 		"1": "analogaudio:item/walkie_talkie/walkie_talkie_screen",
@@ -66,7 +66,7 @@
 			"to": [12, 13, 4.9],
 			"rotation": {"angle": 0, "axis": "y", "origin": [10, 5, 4.9]},
 			"faces": {
-				"north": {"uv": [0, 0, 16, 8], "texture": "#1"},
+				"north": {"uv": [0, 0, 8, 4], "texture": "#1"},
 				"east": {"uv": [0, 0, 0, 10], "texture": "#1"},
 				"south": {"uv": [0, 0, 0, 10], "texture": "#1"},
 				"west": {"uv": [0, 0, 0, 10], "texture": "#1"},
