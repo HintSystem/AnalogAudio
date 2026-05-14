@@ -46,6 +46,7 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
     @SuppressWarnings("unused")
     private double lastX, lastY, lastZ;
     private Runnable trackEndCallback;
+    private java.util.function.Consumer<String> errorCallback;
 
     public LavaRadioStreamer() {
         this.player = PLAYER_MANAGER.createPlayer();
@@ -55,6 +56,11 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
     @Override
     public void setOnTrackEnd(Runnable callback) {
         this.trackEndCallback = callback;
+    }
+
+    @Override
+    public void setOnError(java.util.function.Consumer<String> callback) {
+        this.errorCallback = callback;
     }
 
     @Override
@@ -259,6 +265,21 @@ public class LavaRadioStreamer extends AudioEventAdapter implements IRadioStream
             @Override
             public void loadFailed(FriendlyException exception) {
                 System.err.println("Load failed for URL: " + url + " - " + exception.getMessage());
+                if (errorCallback != null) {
+                    String message = "Failed to play audio.";
+                    Throwable cause = exception.getCause();
+                    while (cause != null) {
+                        if (cause instanceof java.net.UnknownHostException) {
+                            message = "Failed to play audio: You are offline.";
+                            break;
+                        }
+                        cause = cause.getCause();
+                    }
+                    System.out.println("Triggering error callback with message: " + message);
+                    errorCallback.accept(message);
+                } else {
+                    System.out.println("Error callback is null when audio failed to load.");
+                }
             }
         });
     }
