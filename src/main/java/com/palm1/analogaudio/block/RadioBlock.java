@@ -191,6 +191,11 @@ public class RadioBlock extends BaseEntityBlock {
                     }
                 }
                 ClientHooks.stopRadio(pos);
+                AABB stopArea = new AABB(pos).inflate(3.46D);
+                for (net.minecraft.world.entity.animal.Parrot parrot : lvl
+                        .getEntitiesOfClass(net.minecraft.world.entity.animal.Parrot.class, stopArea)) {
+                    parrot.setRecordPlayingNearby(pos, false);
+                }
             });
         } else {
             return createTickerHelper(blockEntityType, ModBlockEntities.RADIO.get(), RadioBlockEntity::serverTick);

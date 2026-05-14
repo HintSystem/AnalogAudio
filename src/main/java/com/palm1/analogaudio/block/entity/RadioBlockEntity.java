@@ -271,6 +271,11 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
 
     public void setSettings(float volume, boolean looping, boolean playing, boolean shuffle) {
         boolean loopStarted = !this.looping && looping;
+        boolean hasData = hasData();
+        if (playing && !hasData) {
+            playing = false;
+        }
+
         if (this.level != null && this.playing != playing) {
             if (playing) {
                 this.startTime = this.level.getGameTime() - this.pausedOffset;
@@ -565,6 +570,11 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
 
     public boolean isPlayingFromBag() {
         return !bagStack.isEmpty() && bagStack.is(ModItems.CASSETTE_BAG.get());
+    }
+
+    public boolean hasData() {
+        ItemStack currentCassette = getCassette();
+        return !currentCassette.isEmpty() && currentCassette.has(ModDataComponents.CASSETTE_DATA.get());
     }
 
     @Override
