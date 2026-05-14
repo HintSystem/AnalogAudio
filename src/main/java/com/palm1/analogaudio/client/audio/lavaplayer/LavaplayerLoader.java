@@ -28,7 +28,7 @@ public class LavaplayerLoader {
                     .forName("com.palm1.analogaudio.lavaplayer.LavaRadioStreamer", true, classLoader)
                     .getDeclaredConstructor().newInstance();
         } catch (Exception e) {
-            AnalogAudio.LOGGER.error("Failed to instantiate LavaRadioStreamer from isolated classloader", e);
+            AnalogAudio.LOGGER.error("Failed to get LavaRadioStreamer class loader.", e);
             return null;
         }
     }
@@ -45,7 +45,7 @@ public class LavaplayerLoader {
             return;
         }
         try {
-            Path cacheDir = Minecraft.getInstance().gameDirectory.toPath().resolve("analogaudio_internal");
+            Path cacheDir = Minecraft.getInstance().gameDirectory.toPath().resolve(".analogaudio/internal");
             if (!Files.exists(cacheDir)) {
                 Files.createDirectories(cacheDir);
             }
@@ -54,16 +54,16 @@ public class LavaplayerLoader {
             try (InputStream in = LavaplayerLoader.class
                     .getResourceAsStream("/assets/analogaudio/lavaplayer/lavaplayer.jar")) {
                 if (in == null) {
-                    throw new RuntimeException("Could not find lavaplayer.jar in mod assets!");
+                    throw new RuntimeException("Unable to find lavaplayer.jar in mod assets.");
                 }
                 Files.copy(in, libJar, StandardCopyOption.REPLACE_EXISTING);
             }
 
             classLoader = new URLClassLoader(new URL[] { libJar.toUri().toURL() },
                     LavaplayerLoader.class.getClassLoader());
-            AnalogAudio.LOGGER.info("Successfully initialized isolated Lavaplayer classloader");
+            AnalogAudio.LOGGER.info("Successfully loaded Lavaplayer library");
         } catch (Exception e) {
-            AnalogAudio.LOGGER.error("Failed to load isolated Lavaplayer library", e);
+            AnalogAudio.LOGGER.error("Failed to load Lavaplayer library", e);
         }
     }
 }
