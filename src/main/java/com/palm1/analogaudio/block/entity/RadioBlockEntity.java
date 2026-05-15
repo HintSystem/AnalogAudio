@@ -638,7 +638,7 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
             if (oldData != null) {
                 playingStack.set(ModDataComponents.CASSETTE_DATA.get(),
                         new CassetteData(oldData.uuid(), oldData.url(), oldData.name(), oldData.color(), this.volume,
-                                oldData.duration()));
+                                oldData.duration(), oldData.authorUuid()));
 
                 if (isPlayingFromBag()) {
                     List<ItemStack> contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());

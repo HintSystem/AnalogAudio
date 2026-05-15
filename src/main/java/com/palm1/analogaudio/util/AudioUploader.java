@@ -6,65 +6,73 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import com.palm1.analogaudio.AnalogAudio;
+import com.palm1.analogaudio.config.ModConfig;
+import com.palm1.analogaudio.network.packet.RequestTokenC2SPacket;
+import com.palm1.analogaudio.network.AnalogAudioNetwork;
+import net.neoforged.neoforge.network.PacketDistributor;
+
 public class AudioUploader {
-    public static final String FILE_HOST_URL = "catbox.moe";
-    private static final String CATBOX_API = "https://" + FILE_HOST_URL + "/user/api.php";
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .build();
 
-    public static CompletableFuture<String> uploadToCatbox(File file) {
-        String boundary = "Boundary-" + UUID.randomUUID().toString();
+    public static CompletableFuture<String> upload(File file) {
+        if (ModConfig.Synced.fileServerEnabled) {
+            return uploadToLocalServer(file);
+        } else if (ModConfig.Synced.allowFileUploads) {
+            return CompletableFuture.completedFuture("client:" + file.getName());
+        } else {
+            return CompletableFuture.failedFuture(new RuntimeException("File uploads are disabled"));
+        }
+    }
 
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                byte[] fileContent = Files.readAllBytes(file.toPath());
-                String fileName = file.getName();
-                String contentType = fileName.endsWith(".ogg") ? "audio/ogg" : "audio/mpeg";
+    private static CompletableFuture<String> uploadToLocalServer(File file) {
+        CompletableFuture<String> future = new CompletableFuture<>();
 
-                StringBuilder bodyStart = new StringBuilder();
-                bodyStart.append("--").append(boundary).append("\r\n");
-                bodyStart.append("Content-Disposition: form-data; name=\"reqtype\"\r\n\r\n");
-                bodyStart.append("fileupload\r\n");
-
-                bodyStart.append("--").append(boundary).append("\r\n");
-                bodyStart.append("Content-Disposition: form-data; name=\"fileToUpload\"; filename=\"").append(fileName)
-                        .append("\"\r\n");
-                bodyStart.append("Content-Type: ").append(contentType).append("\r\n\r\n");
-
-                byte[] startBytes = bodyStart.toString().getBytes();
-                byte[] endBytes = ("\r\n--" + boundary + "--\r\n").getBytes();
-
-                byte[] totalBody = new byte[startBytes.length + fileContent.length + endBytes.length];
-                System.arraycopy(startBytes, 0, totalBody, 0, startBytes.length);
-                System.arraycopy(fileContent, 0, totalBody, startBytes.length, fileContent.length);
-                System.arraycopy(endBytes, 0, totalBody, startBytes.length + fileContent.length, endBytes.length);
-
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(CATBOX_API))
-                        .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                        .header("User-Agent", "AnalogAudio Minecraft Mod")
-                        .POST(HttpRequest.BodyPublishers.ofByteArray(totalBody))
-                        .build();
-
-                HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() == 200) {
-                    String url = response.body().trim();
-                    if (url.startsWith("http")) {
-                        return url;
-                    } else {
-                        throw new IOException("API Error: " + url);
+        AnalogAudioNetwork.tokenCallback = token -> {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    String ip = "127.0.0.1";
+                    net.minecraft.client.multiplayer.ServerData serverData = net.minecraft.client.Minecraft
+                            .getInstance()
+                            .getCurrentServer();
+                    if (serverData != null) {
+                        ip = serverData.ip;
+                        if (ip.contains(":")) {
+                            ip = ip.substring(0, ip.indexOf(':'));
+                        }
                     }
-                } else {
-                    throw new IOException("Failed to upload: " + response.statusCode() + " " + response.body());
+
+                    int port = ModConfig.Synced.fileServerPort;
+                    String uploadUrl = String.format("http://%s:%d/upload", ip, port);
+
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(uploadUrl))
+                            .header("X-AnalogAudio-Auth", token)
+                            .header("X-AnalogAudio-Filename", file.getName())
+                            .POST(HttpRequest.BodyPublishers.ofFile(file.toPath()))
+                            .build();
+
+                    HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+                    if (response.statusCode() == 200) {
+                        future.complete(response.body().trim());
+                    } else {
+                        AnalogAudio.LOGGER.error("File server upload failed with status {}: {}", response.statusCode(),
+                                response.body());
+                        future.completeExceptionally(
+                                new IOException("Server error: " + response.statusCode() + " " + response.body()));
+                    }
+                } catch (Exception e) {
+                    AnalogAudio.LOGGER.error("File server upload failed with exception", e);
+                    future.completeExceptionally(new RuntimeException("Upload failed: " + e.getMessage(), e));
                 }
-            } catch (Exception e) {
-                throw new RuntimeException("Upload failed: " + e.getMessage(), e);
-            }
-        });
+            });
+        };
+
+        PacketDistributor.sendToServer(new RequestTokenC2SPacket());
+        return future;
     }
 }

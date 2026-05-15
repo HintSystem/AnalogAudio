@@ -27,7 +27,7 @@ public class CreateCompat {
                         .getMethod("register", IEventBus.class)
                         .invoke(null, modEventBus);
             } catch (Exception e) {
-                AnalogAudio.LOGGER.error("Failed to register Create Display Sources", e);
+                AnalogAudio.LOGGER.error("Failed to register display sources for Create", e);
             }
         }
     }
@@ -42,7 +42,7 @@ public class CreateCompat {
             if (event.getRegistryKey().equals(armRegistryKey)) {
                 event.register(armRegistryKey, ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID, "radio"),
                         () -> new RadioArmInteractionPoint.Type());
-                AnalogAudio.LOGGER.info("Registered Radio Arm Interaction Point via RegisterEvent");
+                AnalogAudio.LOGGER.info("Registered radio arm interaction point for Create");
             }
         } catch (Exception e) {
         }

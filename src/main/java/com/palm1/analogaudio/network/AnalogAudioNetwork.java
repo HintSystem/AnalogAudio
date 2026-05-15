@@ -14,6 +14,7 @@ import com.palm1.analogaudio.config.ModConfig;
 import com.palm1.analogaudio.inventory.CassetteDeckMenu;
 import com.palm1.analogaudio.item.CassetteData;
 import com.palm1.analogaudio.network.packet.EraseCassetteC2SPacket;
+import com.palm1.analogaudio.util.FileServerEngine;
 import com.palm1.analogaudio.network.packet.NextTrackC2SPacket;
 import com.palm1.analogaudio.network.packet.RadioSignalS2CPacket;
 import com.palm1.analogaudio.network.packet.SetFrequencyC2SPacket;
@@ -21,6 +22,8 @@ import com.palm1.analogaudio.network.packet.SyncConfigS2CPacket;
 import com.palm1.analogaudio.network.packet.UpdateRadioSettingsC2SPacket;
 import com.palm1.analogaudio.network.packet.WriteCassetteC2SPacket;
 import com.palm1.analogaudio.network.packet.WriteResultS2CPacket;
+import com.palm1.analogaudio.network.packet.RequestTokenC2SPacket;
+import com.palm1.analogaudio.network.packet.TokenResponseS2CPacket;
 import com.palm1.analogaudio.registry.ModDataComponents;
 import com.palm1.analogaudio.registry.ModItems;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -28,20 +31,21 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.fml.common.EventBusSubscriber;
 
-import com.palm1.analogaudio.util.AudioUploader;
 import com.palm1.analogaudio.util.ModPermissions;
 import net.minecraft.server.level.ServerPlayer;
 import java.util.function.BiConsumer;
 
 @EventBusSubscriber(modid = "analogaudio")
 public class AnalogAudioNetwork {
+    public static java.util.function.Consumer<String> tokenCallback = null;
     public static BiConsumer<WriteResultS2CPacket, IPayloadContext> writeResultHandler = (d, c) -> {
     };
     public static BiConsumer<RadioSignalS2CPacket, IPayloadContext> radioSignalHandler = (d, c) -> {
     };
     public static BiConsumer<SyncConfigS2CPacket, IPayloadContext> syncConfigHandler = (d, c) -> {
         ModConfig.Synced.set(d.whitelistedUrls(), d.whitelistAsBlacklist(), d.enableWalkieFiltering(),
-                d.allowFileUploads(), d.globalRadioRange(), d.globalSpeakerRange());
+                d.allowFileUploads(), d.globalRadioRange(), d.globalSpeakerRange(),
+                d.fileServerEnabled(), d.fileServerPort());
     };
 
     public static void registerPayloads(final RegisterPayloadHandlersEvent event) {
@@ -86,6 +90,21 @@ public class AnalogAudioNetwork {
                 SyncConfigS2CPacket.TYPE,
                 SyncConfigS2CPacket.STREAM_CODEC,
                 (data, context) -> syncConfigHandler.accept(data, context));
+
+        registrar.playToServer(
+                RequestTokenC2SPacket.TYPE,
+                RequestTokenC2SPacket.STREAM_CODEC,
+                AnalogAudioNetwork::handleRequestToken);
+
+        registrar.playToClient(
+                TokenResponseS2CPacket.TYPE,
+                TokenResponseS2CPacket.STREAM_CODEC,
+                (data, context) -> {
+                    if (tokenCallback != null) {
+                        tokenCallback.accept(data.token());
+                        tokenCallback = null;
+                    }
+                });
     }
 
     @SubscribeEvent
@@ -102,7 +121,9 @@ public class AnalogAudioNetwork {
                 ModConfig.Server.enableWalkieFiltering,
                 ModPermissions.canUploadFiles(player),
                 ModConfig.Server.globalRadioRange,
-                ModConfig.Server.globalSpeakerRange));
+                ModConfig.Server.globalSpeakerRange,
+                FileServerEngine.isRunning(),
+                ModConfig.FileServer.port));
     }
 
     private static void handleNextTrack(final NextTrackC2SPacket data, final IPayloadContext context) {
@@ -118,9 +139,36 @@ public class AnalogAudioNetwork {
         context.enqueueWork(() -> {
             Player player = context.player();
 
-            if (!data.url().isEmpty() && !isValidUrl(data.url(), player)) {
-                context.reply(new WriteResultS2CPacket(4));
-                return;
+            if (!data.url().isEmpty()) {
+                if (!isValidUrl(data.url(), player)) {
+                    context.reply(new WriteResultS2CPacket(4));
+                    return;
+                }
+
+                String url = data.url().toLowerCase();
+                if (url.startsWith("file:///") || url.startsWith("server:")) {
+                    String extension = "";
+                    int lastDot = url.lastIndexOf('.');
+                    if (lastDot > 0) {
+                        extension = url.substring(lastDot + 1);
+                        if (extension.contains("?")) {
+                            extension = extension.substring(0, extension.indexOf('?'));
+                        }
+                    }
+
+                    boolean allowed = false;
+                    for (String format : com.palm1.analogaudio.config.ModConfig.FileServer.allowedFileFormats) {
+                        if (format.equalsIgnoreCase(extension)) {
+                            allowed = true;
+                            break;
+                        }
+                    }
+
+                    if (!allowed) {
+                        context.reply(new WriteResultS2CPacket(5));
+                        return;
+                    }
+                }
             }
 
             if (player.containerMenu instanceof CassetteDeckMenu deckMenu) {
@@ -135,7 +183,8 @@ public class AnalogAudioNetwork {
                     cassette.set(ModDataComponents.CASSETTE_DATA.get(),
                             new CassetteData(uuid, url, name, data.color(),
                                     oldData != null ? oldData.volume() : -1.0f,
-                                    data.duration()));
+                                    data.duration(),
+                                    player.getUUID().toString()));
                     deckMenu.getInventory().setChanged();
                     context.reply(new WriteResultS2CPacket(0));
                 } else {
@@ -146,20 +195,16 @@ public class AnalogAudioNetwork {
     }
 
     private static boolean isValidUrl(String url, Player player) {
+        if (url.startsWith("server:") || url.startsWith("file:///")) {
+            return true;
+        }
+
         if (!(url.startsWith("http://") || url.startsWith("https://"))) {
             return false;
         }
 
         try {
             String host = java.net.URI.create(url).toURL().getHost().toLowerCase();
-
-            if (host.equals(AudioUploader.FILE_HOST_URL) || host.endsWith("." + AudioUploader.FILE_HOST_URL)) {
-                if (ModConfig.Server.allowFileUploads) {
-                    return true;
-                }
-                return player instanceof ServerPlayer sp && ModPermissions.canUploadFiles(sp);
-            }
-
             java.util.List<String> domains = ModConfig.Server.whitelistedUrls;
             boolean isBlacklist = ModConfig.Server.whitelistAsBlacklist;
 
@@ -202,6 +247,15 @@ public class AnalogAudioNetwork {
             BlockEntity be = context.player().level().getBlockEntity(data.pos());
             if (be instanceof RadioBlockEntity radio) {
                 radio.setSettings(data.volume(), data.looping(), data.playing(), data.shuffle());
+            }
+        });
+    }
+
+    private static void handleRequestToken(final RequestTokenC2SPacket data, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer player) {
+                String token = com.palm1.analogaudio.util.FileServerEngine.TokenManager.generateToken(player.getUUID());
+                context.reply(new TokenResponseS2CPacket(token));
             }
         });
     }

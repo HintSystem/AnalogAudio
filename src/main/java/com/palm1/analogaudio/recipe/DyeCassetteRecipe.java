@@ -85,10 +85,10 @@ public class DyeCassetteRecipe extends CustomRecipe {
             CassetteData oldData = result.get(ModDataComponents.CASSETTE_DATA.get());
             if (oldData != null) {
                 result.set(ModDataComponents.CASSETTE_DATA.get(),
-                        new CassetteData(oldData.uuid(), oldData.url(), oldData.name(), finalColor, oldData.volume(), oldData.duration()));
+                        new CassetteData(oldData.uuid(), oldData.url(), oldData.name(), finalColor, oldData.volume(), oldData.duration(), oldData.authorUuid()));
             } else {
                 result.set(ModDataComponents.CASSETTE_DATA.get(),
-                        new CassetteData("", "", "", finalColor, 0.75f, 0L));
+                        new CassetteData("", "", "", finalColor, 0.75f, 0L, ""));
             }
         } else {
             result.set(DataComponents.DYED_COLOR, new DyedItemColor(finalColor, true));

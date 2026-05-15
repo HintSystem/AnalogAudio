@@ -63,6 +63,24 @@ public class ModConfigScreen {
                                                                                 val -> ModConfig.Client.speakerEcho = val)
                                                                 .controller(TickBoxControllerBuilder::create)
                                                                 .build())
+                                                .option(Option.<Boolean>createBuilder()
+                                                                .name(Component.translatable(
+                                                                                "config.analogaudio.enablePlayerSuppliedAudio"))
+                                                                .description(OptionDescription.of(Component
+                                                                                .translatable("config.analogaudio.enablePlayerSuppliedAudio.description")))
+                                                                .binding(false, () -> ModConfig.Client.enablePlayerSuppliedAudio,
+                                                                                val -> ModConfig.Client.enablePlayerSuppliedAudio = val)
+                                                                .controller(TickBoxControllerBuilder::create)
+                                                                .build())
+                                                .option(Option.<Boolean>createBuilder()
+                                                                .name(Component.translatable(
+                                                                                "config.analogaudio.cassetteTapeDisclaimers"))
+                                                                .description(OptionDescription.of(Component
+                                                                                .translatable("config.analogaudio.cassetteTapeDisclaimers.description")))
+                                                                .binding(true, () -> ModConfig.Client.cassetteTapeDisclaimers,
+                                                                                val -> ModConfig.Client.cassetteTapeDisclaimers = val)
+                                                                .controller(TickBoxControllerBuilder::create)
+                                                                .build())
                                                 .option(Option.<Float>createBuilder()
                                                                 .name(Component.translatable(
                                                                                 "config.analogaudio.spatialityThreshold"))
@@ -136,10 +154,7 @@ public class ModConfigScreen {
                                                                                                 .withStyle(ChatFormatting.BOLD,
                                                                                                                 ChatFormatting.RED))
                                                                                 .append(Component.translatable(
-                                                                                                "config.analogaudio.allowFileUploads.disclaimer",
-                                                                                                Component.literal(
-                                                                                                                com.palm1.analogaudio.util.AudioUploader.FILE_HOST_URL)
-                                                                                                                .withStyle(ChatFormatting.RED)))))
+                                                                                                "config.analogaudio.allowFileUploads.local_disclaimer"))))
                                                                 .binding(false, () -> ModConfig.Server.allowFileUploads,
                                                                                 val -> ModConfig.Server.allowFileUploads = val)
                                                                 .controller(TickBoxControllerBuilder::create)

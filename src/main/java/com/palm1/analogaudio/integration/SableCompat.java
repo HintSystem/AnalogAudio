@@ -31,7 +31,7 @@ public class SableCompat {
                 active = true;
                 AnalogAudio.LOGGER.info("Successfully hooked into Sable!");
             } catch (Exception e) {
-                AnalogAudio.LOGGER.warn("AnalogAudio failed to hook into Sable.", e);
+                AnalogAudio.LOGGER.warn("Failed to hook into Sable.", e);
             }
         }
     }

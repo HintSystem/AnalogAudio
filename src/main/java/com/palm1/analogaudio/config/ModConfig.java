@@ -24,6 +24,7 @@ public class ModConfig {
     private static final String FOLDER_NAME = "analogaudio";
     private static final String CLIENT_FILE = "analogaudio.client.toml";
     private static final String SERVER_FILE = "analogaudio.server.toml";
+    private static final String FILE_SERVER_FILE = "analogaudio.fileserver.toml";
     private static Map<String, String> translations = null;
 
     private static String t(String key) {
@@ -52,6 +53,14 @@ public class ModConfig {
         public static int globalSpeakerRange = 64;
     }
 
+    public static class FileServer {
+        public static boolean enabled = false;
+        public static int port = 7000;
+        public static long maxFileSize = 50;
+        public static List<String> allowedFileFormats = new ArrayList<>(
+                Arrays.asList("ogg", "mp3", "wav", "flac", "aac", "m4a"));
+    }
+
     public static class Client {
         public static boolean enableCassetteAnimation = true;
         public static boolean enableSpeakerAnimation = true;
@@ -60,6 +69,8 @@ public class ModConfig {
         public static float spatialityThreshold = 0.3f;
         public static float globalRadioVolume = 1.0f;
         public static boolean speakerEcho = false;
+        public static boolean enablePlayerSuppliedAudio = false;
+        public static boolean cassetteTapeDisclaimers = true;
     }
 
     public static class Synced {
@@ -70,13 +81,19 @@ public class ModConfig {
         public static int globalRadioRange = Server.globalRadioRange;
         public static int globalSpeakerRange = Server.globalSpeakerRange;
 
-        public static void set(List<String> urls, boolean asBlacklist, boolean walkieFiltering, boolean fileUploads, int radioRange, int speakerRange) {
+        public static boolean fileServerEnabled = FileServer.enabled;
+        public static int fileServerPort = FileServer.port;
+
+        public static void set(List<String> urls, boolean asBlacklist, boolean walkieFiltering, boolean fileUploads,
+                int radioRange, int speakerRange, boolean fsEnabled, int fsPort) {
             whitelistedUrls = new ArrayList<>(urls);
             whitelistAsBlacklist = asBlacklist;
             enableWalkieFiltering = walkieFiltering;
             allowFileUploads = fileUploads;
             globalRadioRange = radioRange;
             globalSpeakerRange = speakerRange;
+            fileServerEnabled = fsEnabled;
+            fileServerPort = fsPort;
         }
     }
 
@@ -91,6 +108,7 @@ public class ModConfig {
         }
 
         loadServer(configDir.resolve(SERVER_FILE));
+        loadFileServer(configDir.resolve(FILE_SERVER_FILE));
         if (FMLEnvironment.dist == Dist.CLIENT) {
             loadClient(configDir.resolve(CLIENT_FILE));
         }
@@ -178,6 +196,8 @@ public class ModConfig {
                         case "spatialityThreshold" -> Client.spatialityThreshold = Float.parseFloat(value);
                         case "globalRadioVolume" -> Client.globalRadioVolume = Float.parseFloat(value);
                         case "speakerEcho" -> Client.speakerEcho = Boolean.parseBoolean(value);
+                        case "enablePlayerSuppliedAudio" -> Client.enablePlayerSuppliedAudio = Boolean.parseBoolean(value);
+                        case "cassetteTapeDisclaimers" -> Client.cassetteTapeDisclaimers = Boolean.parseBoolean(value);
                     }
                 } catch (Exception ex) {
                     System.err.println("Failed to parse client config key '" + key + "': " + ex.getMessage());
@@ -185,6 +205,57 @@ public class ModConfig {
             }
         } catch (Exception e) {
             System.err.println("Failed to load AnalogAudio client config: " + e.getMessage());
+        }
+    }
+
+    private static void loadFileServer(Path path) {
+        if (!Files.exists(path)) {
+            saveFileServer(path);
+            return;
+        }
+
+        try {
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            for (String line : lines) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("#"))
+                    continue;
+
+                String[] parts = line.split("=", 2);
+                if (parts.length < 2)
+                    continue;
+
+                String key = parts[0].trim();
+                String value = parts[1].trim();
+
+                if (value.startsWith("\"") && value.endsWith("\"")) {
+                    value = value.substring(1, value.length() - 1);
+                }
+
+                try {
+                    switch (key) {
+                        case "enabled" -> FileServer.enabled = Boolean.parseBoolean(value);
+                        case "port" -> FileServer.port = Integer.parseInt(value);
+                        case "maxFileSize" -> FileServer.maxFileSize = Long.parseLong(value);
+                        case "allowedFileFormats" -> {
+                            if (value.startsWith("[") && value.endsWith("]")) {
+                                String content = value.substring(1, value.length() - 1);
+                                FileServer.allowedFileFormats = Arrays.stream(content.split(","))
+                                        .map(String::trim)
+                                        .filter(s -> !s.isEmpty())
+                                        .map(s -> s.startsWith("\"") && s.endsWith("\"")
+                                                ? s.substring(1, s.length() - 1)
+                                                : s)
+                                        .collect(Collectors.toList());
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Failed to parse file server config key '" + key + "': " + ex.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load AnalogAudio file server config: " + e.getMessage());
         }
     }
 
@@ -198,6 +269,7 @@ public class ModConfig {
             }
         }
         saveServer(configDir.resolve(SERVER_FILE));
+        saveFileServer(configDir.resolve(FILE_SERVER_FILE));
         if (FMLEnvironment.dist == Dist.CLIENT) {
             saveClient(configDir.resolve(CLIENT_FILE));
         }
@@ -261,11 +333,45 @@ public class ModConfig {
         lines.add("");
         lines.add("# " + t("config.analogaudio.speakerEcho.description"));
         lines.add("speakerEcho = " + Client.speakerEcho);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.enablePlayerSuppliedAudio.description"));
+        lines.add("enablePlayerSuppliedAudio = " + Client.enablePlayerSuppliedAudio);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.cassetteTapeDisclaimers.description"));
+        lines.add("cassetteTapeDisclaimers = " + Client.cassetteTapeDisclaimers);
 
         try {
             Files.write(path, lines, StandardCharsets.UTF_8);
         } catch (IOException e) {
             System.err.println("Failed to save AnalogAudio client config: " + e.getMessage());
+        }
+    }
+
+    private static void saveFileServer(Path path) {
+        List<String> lines = new ArrayList<>();
+        lines.add("# ============================================================");
+        lines.add("# " + t("config.analogaudio.category.fileserver"));
+        lines.add("# ============================================================");
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.fileserver.enabled.description"));
+        lines.add("# " + t("config.analogaudio.fileserver.enabled.disclaimer"));
+        lines.add("enabled = " + FileServer.enabled);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.fileserver.port.description"));
+        lines.add("port = " + FileServer.port);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.fileserver.maxFileSize.description"));
+        lines.add("maxFileSize = " + FileServer.maxFileSize);
+        lines.add("");
+        lines.add("# " + t("config.analogaudio.fileserver.allowedFileFormats.description"));
+        lines.add("allowedFileFormats = ["
+                + FileServer.allowedFileFormats.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", "))
+                + "]");
+
+        try {
+            Files.write(path, lines, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.err.println("Failed to save AnalogAudio file server config: " + e.getMessage());
         }
     }
 }

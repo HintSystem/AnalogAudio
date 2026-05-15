@@ -48,6 +48,8 @@ public class AnalogAudio {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(AnalogAudioNetwork::registerPayloads);
         modEventBus.register(ModCapabilities.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::serverStarting);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::serverStopping);
 
         if (net.neoforged.fml.loading.FMLEnvironment.dist == net.neoforged.api.distmarker.Dist.CLIENT) {
             try {
@@ -68,5 +70,13 @@ public class AnalogAudio {
         if (net.neoforged.fml.ModList.get().isLoaded("plasmovoice")) {
             LOGGER.info("Successfully integrated with Plasmo Voice!");
         }
+    }
+
+    private void serverStarting(net.neoforged.neoforge.event.server.ServerStartingEvent event) {
+        com.palm1.analogaudio.util.FileServerEngine.start();
+    }
+
+    private void serverStopping(net.neoforged.neoforge.event.server.ServerStoppingEvent event) {
+        com.palm1.analogaudio.util.FileServerEngine.stop();
     }
 }

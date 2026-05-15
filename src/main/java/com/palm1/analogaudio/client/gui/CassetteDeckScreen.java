@@ -105,6 +105,9 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
         }
     }
 
+    private final java.util.Map<String, String> localPathCache = new java.util.HashMap<>();
+    private ItemStack lastTape = ItemStack.EMPTY;
+
     public CassetteDeckScreen(CassetteDeckMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 176;
@@ -200,7 +203,8 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                                 stack.set(ModDataComponents.CASSETTE_DATA.get(),
                                         new CassetteData(uuid, url, name, colorVal,
                                                 oldData != null ? oldData.volume() : -1.0f,
-                                                oldData != null ? oldData.duration() : 0L));
+                                                oldData != null ? oldData.duration() : 0L,
+                                                oldData != null ? oldData.authorUuid() : ""));
                             }
                         }) {
                     @Override
@@ -230,6 +234,11 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                 new WidgetSprites(WRITE_NORMAL, WRITE_NORMAL), button -> {
                     if (this.menu.getSlot(0).hasItem()) {
                         String url = this.urlBox.getValue();
+                        if (url.startsWith("client:")) {
+                            url = localPathCache.getOrDefault(url, url);
+                        }
+                        final String finalUrl = url;
+
                         if (url.isEmpty()) {
                             PacketDistributor.sendToServer(
                                     new WriteCassetteC2SPacket(url, this.nameBox.getValue(),
@@ -255,10 +264,10 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                             return;
                         }
 
-                        streamer.fetchDuration(url, duration -> {
+                        streamer.fetchDuration(finalUrl, duration -> {
                             Minecraft.getInstance().execute(() -> {
                                 PacketDistributor.sendToServer(
-                                        new WriteCassetteC2SPacket(url, this.nameBox.getValue(),
+                                        new WriteCassetteC2SPacket(finalUrl, this.nameBox.getValue(),
                                                 this.selectedColor, duration));
                                 setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.writing"),
                                         StatusType.INFO, 60);
@@ -354,9 +363,19 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                     if (path != null) {
                         File file = new File(path);
                         if (file.exists()) {
+                            long maxBytes = ModConfig.FileServer.maxFileSize * 1024 * 1024;
+                            if (file.length() > maxBytes) {
+                                setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.file_too_large"),
+                                        StatusType.ERROR, 100);
+                                return;
+                            }
+
                             setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.uploading"),
                                     StatusType.INFO, 1000);
-                            AudioUploader.uploadToCatbox(file).thenAccept(url -> {
+                            AudioUploader.upload(file).thenAccept(url -> {
+                                if (url.startsWith("client:")) {
+                                    localPathCache.put(url, "file:///" + file.getAbsolutePath().replace("\\", "/"));
+                                }
                                 this.minecraft.execute(() -> {
                                     this.urlBox.setValue(url);
                                     setStatus(
@@ -366,9 +385,17 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                                 });
                             }).exceptionally(ex -> {
                                 this.minecraft.execute(() -> {
-                                    setStatus(
-                                            Component.translatable("gui.analogaudio.cassette_deck.status.upload_fail"),
-                                            StatusType.ERROR, 60);
+                                    String msg = ex.getMessage();
+                                    if (msg != null && msg.contains("File too large")) {
+                                        setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.file_too_large"),
+                                                StatusType.ERROR, 60);
+                                    } else if (msg != null && msg.contains("File format not allowed")) {
+                                        setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.disallowed_format"),
+                                                StatusType.ERROR, 60);
+                                    } else {
+                                        setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.upload_fail"),
+                                                StatusType.ERROR, 60);
+                                    }
                                 });
                                 return null;
                             });
@@ -400,8 +427,7 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
         if (fileUploads) {
             browseBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.browse")
                     .append("\n§7")
-                    .append(Component.translatable("gui.analogaudio.cassette_deck.browse_disclaimer",
-                            Component.literal(AudioUploader.FILE_HOST_URL).withStyle(ChatFormatting.RED)))));
+                    .append(Component.translatable("gui.analogaudio.cassette_deck.browse_disclaimer"))));
         } else {
             browseBtn.setTooltip(Tooltip.create(Component.translatable("gui.analogaudio.cassette_deck.browse")
                     .append("\n§c")
@@ -420,7 +446,7 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
             return UrlValidationResult.ALLOWED;
         String lower = url.toLowerCase();
 
-        if (ModConfig.Synced.allowFileUploads && lower.contains(AudioUploader.FILE_HOST_URL.toLowerCase())) {
+        if (lower.startsWith("server:") || lower.startsWith("file:///")) {
             return UrlValidationResult.ALLOWED;
         }
 
@@ -461,6 +487,8 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                     StatusType.ERROR, 100);
             case 4 -> setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.invalid_url"),
                     StatusType.ERROR, 100);
+            case 5 -> setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.disallowed_format"),
+                    StatusType.ERROR, 100);
         }
     }
 
@@ -476,15 +504,30 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
         }
 
         ItemStack stack = this.menu.getSlot(0).getItem();
-        if (stack.isEmpty()) {
-            selectedColor = 0xFFFFFFFF;
-        } else if (stack.is(ModItems.CASSETTE_TAPE.get())) {
-            CassetteData data = stack
-                    .get(ModDataComponents.CASSETTE_DATA.get());
-            if (data != null) {
-                selectedColor = data.color();
-            } else {
-                selectedColor = 0xFFFFFF;
+        if (!ItemStack.matches(stack, lastTape)) {
+            lastTape = stack.copy();
+            if (stack.isEmpty()) {
+                this.urlBox.setValue("");
+                this.nameBox.setValue("");
+                this.selectedColor = 0xFFFFFFFF;
+            } else if (stack.is(ModItems.CASSETTE_TAPE.get())) {
+                CassetteData data = stack.get(ModDataComponents.CASSETTE_DATA.get());
+                if (data != null) {
+                    String url = data.url();
+                    if (url.startsWith("file:///")) {
+                        String filename = url.substring(url.lastIndexOf('/') + 1);
+                        String clientUrl = "client:" + filename;
+                        localPathCache.put(clientUrl, url);
+                        url = clientUrl;
+                    }
+                    this.urlBox.setValue(url);
+                    this.nameBox.setValue(data.name());
+                    this.selectedColor = data.color();
+                } else {
+                    this.urlBox.setValue("");
+                    this.nameBox.setValue("");
+                    this.selectedColor = 0xFFFFFF;
+                }
             }
         }
     }

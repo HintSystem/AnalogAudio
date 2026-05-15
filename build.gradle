@@ -109,6 +109,9 @@ dependencies {
 
     // Sound Physics Remastered
     compileOnly "maven.modrinth:sound-physics-remastered:neoforge-1.21.1-1.5.1"
+
+    // Netty for file server
+    implementation "io.netty:netty-codec-http:4.1.97.Final"
 }
 
 tasks.withType(ProcessResources).configureEach {

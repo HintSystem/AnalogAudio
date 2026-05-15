@@ -63,6 +63,30 @@ public class AnalogAudioClientEvents {
                     tooltip.addAll(wrapComponent(Component.translatable(descKey).withStyle(ChatFormatting.GRAY), 32,
                             null, null));
                 }
+
+                if (path.equals("cassette_tape")) {
+                    var data = stack.get(com.palm1.analogaudio.registry.ModDataComponents.CASSETTE_DATA.get());
+                    if (data != null) {
+                        String authorName = "???";
+                        String authorUuidStr = data.authorUuid();
+                        if (authorUuidStr != null && !authorUuidStr.isEmpty()) {
+                            try {
+                                var uuid = java.util.UUID.fromString(authorUuidStr);
+                                var connection = Minecraft.getInstance().getConnection();
+                                if (connection != null) {
+                                    var info = connection.getPlayerInfo(uuid);
+                                    if (info != null) {
+                                        authorName = info.getProfile().getName();
+                                    } else if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.getUUID().equals(uuid)) {
+                                        authorName = Minecraft.getInstance().player.getName().getString();
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+                        }
+                        tooltip.add(Component.translatable("tooltip.analogaudio.author",
+                                Component.literal(authorName).withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.WHITE));
+                    }
+                }
             } else {
                 tooltip.add(Component.translatable("tooltip.analogaudio.view_tooltip_description",
                         Component.literal("SHIFT").withStyle(ChatFormatting.YELLOW))
