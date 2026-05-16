@@ -56,3 +56,10 @@ Bring the warm comfort of analog audio mediums to your world!
     versionRange="[0.6.0,)"
     ordering="AFTER"
     side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="yet_another_config_lib_v3"
+    type="optional"
+    versionRange="[3.0.0,)"
+    ordering="AFTER"
+    side="BOTH"
