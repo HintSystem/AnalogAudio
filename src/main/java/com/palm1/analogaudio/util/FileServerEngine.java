@@ -54,7 +54,9 @@ public class FileServerEngine {
         int serverPort = server.getPort();
 
         if (configPort == serverPort) {
-            AnalogAudio.LOGGER.warn("File server: Configured port ({}) is the same as the Minecraft server port. The file server will not start. Please change 'port' in analogaudio.fileserver.toml to a different value (e.g. 7000).", configPort);
+            AnalogAudio.LOGGER.warn(
+                    "File server: Configured port ({}) is the same as the Minecraft server port. The file server will not start. Please change 'port' in analogaudio.fileserver.toml to a different value (e.g. 7000).",
+                    configPort);
             return;
         }
 
@@ -67,7 +69,8 @@ public class FileServerEngine {
             AnalogAudio.LOGGER.info("File server: Started fs on port {}", configPort);
         } catch (IOException e) {
             AnalogAudio.LOGGER.error(
-                    "Failed to start standalone file server on port {}: {}. Ensure this port is not in use by another application.", configPort,
+                    "Failed to start standalone file server on port {}: {}. Ensure this port is not in use by another application.",
+                    configPort,
                     e.getMessage());
             standaloneServer = null;
         }
@@ -229,7 +232,8 @@ public class FileServerEngine {
         }
 
         if (data.length > ModConfig.FileServer.maxFileSize * 1024 * 1024) {
-            throw new IOException("File too large: " + data.length + " bytes (max allowed: " + ModConfig.FileServer.maxFileSize + " MB)");
+            throw new IOException("File too large: " + data.length + " bytes (max allowed: "
+                    + ModConfig.FileServer.maxFileSize + " MB)");
         }
 
         Path storage = getStoragePath();

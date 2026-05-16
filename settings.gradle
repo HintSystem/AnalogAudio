@@ -10,4 +10,4 @@ plugins {
 }
 
 rootProject.name = 'AnalogAudio'
-include ':lavaplayer-impl'
+include ':analogplayer'

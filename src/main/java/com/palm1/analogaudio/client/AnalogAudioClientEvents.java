@@ -2,15 +2,22 @@ package com.palm1.analogaudio.client;
 
 import com.palm1.analogaudio.AnalogAudio;
 import com.palm1.analogaudio.client.audio.ClientAudioEngine;
+import com.palm1.analogaudio.client.audio.lavaplayer.LavaplayerLoader;
+import com.palm1.analogaudio.client.gui.LavaplayerWelcomeScreen;
+import com.palm1.analogaudio.config.ModConfig;
+import com.palm1.analogaudio.registry.ModDataComponents;
 
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -23,6 +30,15 @@ public class AnalogAudioClientEvents {
     @SubscribeEvent
     public static void onLogin(ClientPlayerNetworkEvent.LoggingIn event) {
         ClientAudioEngine.prepareForSession();
+    }
+
+    @SubscribeEvent
+    public static void onScreenOpening(ScreenEvent.Opening event) {
+        if (event.getNewScreen() instanceof TitleScreen && !ModConfig.Client.lavaplayerDisabled) {
+            if (LavaplayerLoader.isMissing()) {
+                event.setNewScreen(new LavaplayerWelcomeScreen(event.getNewScreen()));
+            }
+        }
     }
 
     @SubscribeEvent
@@ -65,7 +81,7 @@ public class AnalogAudioClientEvents {
                 }
 
                 if (path.equals("cassette_tape")) {
-                    var data = stack.get(com.palm1.analogaudio.registry.ModDataComponents.CASSETTE_DATA.get());
+                    var data = stack.get(ModDataComponents.CASSETTE_DATA.get());
                     if (data != null) {
                         String authorName = "???";
                         String authorUuidStr = data.authorUuid();
@@ -77,14 +93,17 @@ public class AnalogAudioClientEvents {
                                     var info = connection.getPlayerInfo(uuid);
                                     if (info != null) {
                                         authorName = info.getProfile().getName();
-                                    } else if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.getUUID().equals(uuid)) {
+                                    } else if (Minecraft.getInstance().player != null
+                                            && Minecraft.getInstance().player.getUUID().equals(uuid)) {
                                         authorName = Minecraft.getInstance().player.getName().getString();
                                     }
                                 }
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                            }
                         }
                         tooltip.add(Component.translatable("tooltip.analogaudio.author",
-                                Component.literal(authorName).withStyle(ChatFormatting.GRAY)).withStyle(ChatFormatting.WHITE));
+                                Component.literal(authorName).withStyle(ChatFormatting.GRAY))
+                                .withStyle(ChatFormatting.WHITE));
                     }
                 }
             } else {
@@ -128,7 +147,7 @@ public class AnalogAudioClientEvents {
         return wrapped;
     }
 
-    private static Component applyHighlight(String text, net.minecraft.network.chat.Style style, String highlight,
+    private static Component applyHighlight(String text, Style style, String highlight,
             ChatFormatting highlightColor) {
         if (highlight == null || !text.contains(highlight)) {
             return Component.literal(text).withStyle(style);
