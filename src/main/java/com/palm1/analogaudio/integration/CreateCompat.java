@@ -55,8 +55,7 @@ public class CreateCompat {
                         .forName("com.simibubi.create.api.behaviour.movement.MovementBehaviour");
                 Field registryField = movementBehaviourClass.getField("REGISTRY");
                 Object registry = registryField.get(null);
-                Method addMethod = registry.getClass().getMethod("add",
-                        Block.class, movementBehaviourClass);
+                Method addMethod = registry.getClass().getMethod("register", Block.class, movementBehaviourClass);
 
                 Object behavior = Class.forName("com.palm1.analogaudio.integration.create.RadioMovementBehaviour")
                         .getDeclaredConstructor().newInstance();
