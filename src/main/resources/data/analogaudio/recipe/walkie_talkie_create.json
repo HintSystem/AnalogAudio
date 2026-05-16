@@ -5,7 +5,7 @@
       "modid": "create"
     },
     {
-      "type": "neoforge:any",
+      "type": "neoforge:or",
       "values": [
         {
           "type": "neoforge:mod_loaded",
