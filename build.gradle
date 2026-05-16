@@ -48,7 +48,6 @@ repositories {
     }
     maven { url "https://maven.lavalink.dev/releases" }
     maven { url "https://repo.u-team.info" }
-    maven { url 'https://jitpack.io' }
 }
 
 base {
@@ -120,7 +119,7 @@ dependencies {
     if (findProject(':analogplayer') != null) {
         compileOnly project(':analogplayer')
     } else {
-        compileOnly "com.github.palmmc:analogplayer:${analogplayer_version}"
+        compileOnly files('libs/analogplayer.jar')
     }
 }
 
