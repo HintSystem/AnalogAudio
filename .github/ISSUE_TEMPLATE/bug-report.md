@@ -11,9 +11,9 @@ assignees: palmmc
 Please clearly describe the issue you're having to the best of your ability.
 
 ### Environment
-**Mod Version:** (e.g. `0.1.0-beta.1`)
-**Mod Loader/Minecraft Version:** (e.g. `Neoforge 1.21.1`)
-**Dedicated Server:** `Y/N`
+**Mod Version:** 
+**Mod Loader/Minecraft Version:** 
+**Dedicated Server:** 
 
 ### Upload log
 Please use [**mclo.gs**](https://mclo.gs) to upload your `latest.log` file and/or crash report.
