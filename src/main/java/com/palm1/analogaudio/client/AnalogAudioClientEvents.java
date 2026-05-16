@@ -8,6 +8,7 @@ import com.palm1.analogaudio.config.ModConfig;
 import com.palm1.analogaudio.registry.ModDataComponents;
 
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
@@ -27,16 +28,21 @@ import java.util.ArrayList;
 
 @EventBusSubscriber(modid = AnalogAudio.MODID, value = Dist.CLIENT)
 public class AnalogAudioClientEvents {
+    private static boolean welcomeScreenShown = false;
+
     @SubscribeEvent
     public static void onLogin(ClientPlayerNetworkEvent.LoggingIn event) {
         ClientAudioEngine.prepareForSession();
     }
 
-    @SubscribeEvent
-    public static void onScreenOpening(ScreenEvent.Opening event) {
-        if (event.getNewScreen() instanceof TitleScreen && !ModConfig.Client.lavaplayerDisabled) {
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public static void onScreenInit(ScreenEvent.Init.Post event) {
+        if (!welcomeScreenShown && event.getScreen() instanceof TitleScreen && !ModConfig.Client.lavaplayerDisabled) {
             if (LavaplayerLoader.isMissing()) {
-                event.setNewScreen(new LavaplayerWelcomeScreen(event.getNewScreen()));
+                welcomeScreenShown = true;
+                Screen currentScreen = Minecraft.getInstance().screen;
+                Minecraft.getInstance().setScreen(
+                        new LavaplayerWelcomeScreen(currentScreen != null ? currentScreen : event.getScreen()));
             }
         }
     }
