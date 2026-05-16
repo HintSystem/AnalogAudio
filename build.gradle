@@ -106,8 +106,12 @@ dependencies {
         transitive = false
     }
 
+    // YACL
     implementation "dev.isxander:yet-another-config-lib:${yacl_version}-neoforge"
-    jarJar "dev.isxander:yet-another-config-lib:${yacl_version}-neoforge"
+    jarJar(group: 'dev.isxander', name: 'yet-another-config-lib', version: "${yacl_version}-neoforge") {
+        transitive = true
+    }
+    jarJar.pin(configurations.jarJar.dependencies.last(), "${yacl_version}-neoforge")
 
     // Sound Physics Remastered
     compileOnly "maven.modrinth:sound-physics-remastered:neoforge-1.21.1-1.5.1"
@@ -183,4 +187,13 @@ tasks.register('updateLavaplayerVersion') {
 compileJava.dependsOn updateLavaplayerVersion
 if (findProject(':analogplayer') != null) {
     compileJava.dependsOn ':analogplayer:shadowJar'
+}
+
+tasks.named('jar', Jar).configure {
+    archiveClassifier = 'small'
+}
+
+tasks.named('jarJar', net.neoforged.gradle.common.tasks.JarJar).configure {
+    from tasks.named('jar')
+    archiveClassifier = ''
 }
