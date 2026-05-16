@@ -48,6 +48,7 @@ repositories {
     }
     maven { url "https://maven.lavalink.dev/releases" }
     maven { url "https://repo.u-team.info" }
+    maven { url 'https://jitpack.io' }
 }
 
 base {
@@ -116,7 +117,11 @@ dependencies {
     implementation "io.netty:netty-codec-http:4.1.97.Final"
 
     // AnalogPlayer (patched lavaplayer)
-    compileOnly project(':analogplayer')
+    if (findProject(':analogplayer') != null) {
+        compileOnly project(':analogplayer')
+    } else {
+        compileOnly "com.github.palmmc:analogplayer:${analogplayer_version}"
+    }
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -177,4 +182,6 @@ tasks.register('updateLavaplayerVersion') {
     }
 }
 compileJava.dependsOn updateLavaplayerVersion
-compileJava.dependsOn ':analogplayer:shadowJar'
+if (findProject(':analogplayer') != null) {
+    compileJava.dependsOn ':analogplayer:shadowJar'
+}

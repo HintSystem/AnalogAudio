@@ -10,4 +10,6 @@ plugins {
 }
 
 rootProject.name = 'AnalogAudio'
-include ':analogplayer'
+if (file('analogplayer').exists()) {
+    include ':analogplayer'
+}
