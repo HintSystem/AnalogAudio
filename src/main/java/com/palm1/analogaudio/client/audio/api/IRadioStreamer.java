@@ -2,7 +2,8 @@ package com.palm1.analogaudio.client.audio.api;
 
 public interface IRadioStreamer {
     void setSettings(float volume, boolean looping);
-    void updatePosition(double x, double y, double z, double pX, double pY, double pZ, double vX, double vY, double vZ);
+    void setSpatial(boolean spatial);
+    void updatePosition(double x, double y, double z, double pX, double pY, double pZ, double vX, double vY, double vZ, double range, float volumeFactor);
     boolean isPlaying();
     String getCurrentUUID();
     void setCurrentUUID(String uuid);

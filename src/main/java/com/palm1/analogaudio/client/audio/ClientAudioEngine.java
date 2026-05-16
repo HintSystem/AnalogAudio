@@ -86,8 +86,8 @@ public class ClientAudioEngine {
                     Minecraft mc = Minecraft.getInstance();
                     if (mc.player != null && mc.player.position().distanceToSqr(pos) < 256) {
                         mc.player.displayClientMessage(
-                                net.minecraft.network.chat.Component.translatable("gui.analogaudio.playback_disabled")
-                                        .withStyle(net.minecraft.ChatFormatting.RED),
+                                Component.translatable("gui.analogaudio.playback_disabled")
+                                        .withStyle(ChatFormatting.RED),
                                 true);
                     }
                     PLAYING.put(identity, new StreamerEntry(null, data.uuid(), false));
@@ -123,6 +123,7 @@ public class ClientAudioEngine {
         IRadioStreamer streamer = entry.streamer();
         if (streamer != null && Minecraft.getInstance().player != null) {
             streamer.setSettings(volume, looping);
+            streamer.setSpatial(ModConfig.Client.enableSpatialAudio);
             Vec3 pPos = Minecraft.getInstance().player.position();
             Level level = Minecraft.getInstance().level;
 
@@ -130,7 +131,7 @@ public class ClientAudioEngine {
             Vec3 velocity = SableCompat.getVelocity(level, pos);
 
             streamer.updatePosition(globalPos.x, globalPos.y, globalPos.z, pPos.x, pPos.y, pPos.z, velocity.x,
-                    velocity.y, velocity.z);
+                    velocity.y, velocity.z, ModConfig.Synced.globalRadioRange, ModConfig.Client.globalRadioVolume);
         }
     }
 
@@ -166,6 +167,7 @@ public class ClientAudioEngine {
             newStreamer.playTrack(url, offsetMs);
 
             newStreamer.setSettings(volume, looping);
+            newStreamer.setSpatial(ModConfig.Client.enableSpatialAudio);
             if (Minecraft.getInstance().player != null) {
                 Vec3 pPos = Minecraft.getInstance().player.position();
                 Level level = Minecraft.getInstance().level;
@@ -173,10 +175,14 @@ public class ClientAudioEngine {
                 Vec3 globalPos = SableCompat.getGlobalPos(level, pos);
                 Vec3 velocity = SableCompat.getVelocity(level, pos);
                 newStreamer.updatePosition(globalPos.x, globalPos.y, globalPos.z, pPos.x, pPos.y, pPos.z, velocity.x,
-                        velocity.y, velocity.z);
+                        velocity.y, velocity.z, ModConfig.Synced.globalRadioRange, ModConfig.Client.globalRadioVolume);
             }
         } else {
             FAILED.add(identity);
+            if (LavaplayerLoader.isMissing()) {
+                AnalogAudio.LOGGER.warn(
+                        "Audio playback skipped. Please install dependency analogplayer: https://github.com/palmmc/analogplayer/releases");
+            }
         }
     }
 
