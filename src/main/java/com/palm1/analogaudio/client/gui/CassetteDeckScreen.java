@@ -7,9 +7,9 @@ import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -387,13 +387,19 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                                 this.minecraft.execute(() -> {
                                     String msg = ex.getMessage();
                                     if (msg != null && msg.contains("File too large")) {
-                                        setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.file_too_large"),
+                                        setStatus(
+                                                Component.translatable(
+                                                        "gui.analogaudio.cassette_deck.status.file_too_large"),
                                                 StatusType.ERROR, 60);
                                     } else if (msg != null && msg.contains("File format not allowed")) {
-                                        setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.disallowed_format"),
+                                        setStatus(
+                                                Component.translatable(
+                                                        "gui.analogaudio.cassette_deck.status.disallowed_format"),
                                                 StatusType.ERROR, 60);
                                     } else {
-                                        setStatus(Component.translatable("gui.analogaudio.cassette_deck.status.upload_fail"),
+                                        setStatus(
+                                                Component.translatable(
+                                                        "gui.analogaudio.cassette_deck.status.upload_fail"),
                                                 StatusType.ERROR, 60);
                                     }
                                 });
@@ -550,6 +556,16 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
     @Override
     protected void renderSlot(GuiGraphics guiGraphics, Slot slot) {
         if (slot.index == 0) {
+            if (slot.getItem().isEmpty()) {
+                guiGraphics.pose().pushPose();
+                guiGraphics.pose().translate(slot.x, slot.y, 0);
+                guiGraphics.pose().scale(2.0f, 2.0f, 1.0f);
+                guiGraphics.pose().translate(-slot.x, -slot.y, 0);
+                renderGhostItem(guiGraphics, ModItems.CASSETTE_TAPE.get().getDefaultInstance(), slot.x, slot.y,
+                        this.hoveredSlot == slot);
+                guiGraphics.pose().popPose();
+            }
+
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(slot.x, slot.y, 0);
             guiGraphics.pose().scale(2.0f, 2.0f, 1.0f);
@@ -559,6 +575,16 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
         } else {
             super.renderSlot(guiGraphics, slot);
         }
+    }
+
+    private void renderGhostItem(GuiGraphics guiGraphics, ItemStack stack, int x, int y, boolean hovered) {
+        float alpha = hovered ? 0.6f : 0.3f;
+        guiGraphics.setColor(1.0f, 1.0f, 1.0f, alpha);
+        guiGraphics.renderItem(stack, x, y);
+        if (hovered) {
+            guiGraphics.fill(RenderType.guiGhostRecipeOverlay(), x, y, x + 16, y + 16, 0x30FFFFFF);
+        }
+        guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     @Override

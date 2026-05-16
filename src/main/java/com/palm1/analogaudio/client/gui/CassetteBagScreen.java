@@ -5,8 +5,12 @@ import com.palm1.analogaudio.inventory.CassetteBagMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import com.palm1.analogaudio.registry.ModItems;
 
 public class CassetteBagScreen extends AbstractContainerScreen<CassetteBagMenu> {
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(AnalogAudio.MODID,
@@ -34,5 +38,24 @@ public class CassetteBagScreen extends AbstractContainerScreen<CassetteBagMenu> 
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         this.renderTooltip(guiGraphics, mouseX, mouseY);
+    }
+
+    @Override
+    protected void renderSlot(GuiGraphics guiGraphics, Slot slot) {
+        if (slot.getItem().isEmpty() && slot.index < 18) {
+            renderGhostItem(guiGraphics, ModItems.CASSETTE_TAPE.get().getDefaultInstance(), slot.x, slot.y,
+                    this.hoveredSlot == slot);
+        }
+        super.renderSlot(guiGraphics, slot);
+    }
+
+    private void renderGhostItem(GuiGraphics guiGraphics, ItemStack stack, int x, int y, boolean hovered) {
+        float alpha = hovered ? 0.6f : 0.3f;
+        guiGraphics.setColor(1.0f, 1.0f, 1.0f, alpha);
+        guiGraphics.renderItem(stack, x, y);
+        if (hovered) {
+            guiGraphics.fill(RenderType.guiGhostRecipeOverlay(), x, y, x + 16, y + 16, 0x30FFFFFF);
+        }
+        guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
