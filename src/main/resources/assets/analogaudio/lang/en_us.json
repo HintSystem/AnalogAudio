@@ -147,5 +147,23 @@
   "config.analogaudio.fileserver.allowedFileFormats.description": "A list of file format extensions that are allowed to be uploaded to the file server.",
   // Create Mod Translations
   "analogaudio.display_source.radio": "Radio Track Info",
-  "analogaudio.display_source.speaker": "Speaker Sources Info"
+  "analogaudio.display_source.speaker": "Speaker Sources Info",
+  // Ponder Scene Translations
+  // Radio Scene Translations
+  "analogaudio.ponder.radio_intro.header": "Using Radios",
+  "analogaudio.ponder.radio_intro.text_1": "Radios can be used to play audio using cassette tapes.",
+  "analogaudio.ponder.radio_redstone.header": "Radios and Redstone",
+  "analogaudio.ponder.radio_redstone.text_1": "Radios will output a redstone signal dependent on the duration of the audio playing.",
+  "analogaudio.ponder.radio_display_link.header": "Radio Displays",
+  "analogaudio.ponder.radio_display_link.text_1": "Display links will display the name and duration when audio is playing.",
+  "analogaudio.ponder.radio_mechanical_arms.header": "Radios at Arms",
+  "analogaudio.ponder.radio_mechanical_arms.text_1": "Mechanical arms can also be used to insert and eject cassette tapes from radios.",
+  // Speaker Scene Translations
+  "analogaudio.ponder.speaker_intro.header": "Using Speakers",
+  "analogaudio.ponder.speaker_intro.text_1": "Speakers play back voices from walkie talkies on its same frequency.",
+  "analogaudio.ponder.speaker_intro.text_2": "You can view a speaker's frequency by looking at it.",
+  "analogaudio.ponder.speaker_redstone.header": "Speakers and Redstone",
+  "analogaudio.ponder.speaker_redstone.text_1": "Speakers will output a redstone signal when a player is talking.",
+  "analogaudio.ponder.speaker_display_link.header": "Speaker Displays",
+  "analogaudio.ponder.speaker_display_link.text_1": "Display links will display the name of a player when they are talking."
 }

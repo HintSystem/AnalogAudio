@@ -58,6 +58,16 @@ public class AnalogAudioClient {
             modEventBus.addListener(VoicechatClientHooks::registerAdditionalModels);
         }
 
+        if (ModList.get().isLoaded("ponder")) {
+            try {
+                Class.forName("com.palm1.analogaudio.integration.ponder.PonderIntegration")
+                        .getMethod("register")
+                        .invoke(null);
+            } catch (Exception e) {
+                AnalogAudio.LOGGER.error("Failed to register Ponder integration", e);
+            }
+        }
+
         if (ModList.get().isLoaded("plasmovoice")) {
             try {
                 su.plo.voice.api.client.PlasmoVoiceClient.getAddonsLoader()
