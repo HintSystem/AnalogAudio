@@ -14,7 +14,7 @@ public class ClientAudioFilter {
 
     public void apply(short[] audio, double distance, int frequency) {
         // Easter egg frequency
-        if (frequency == 7) {
+        if (frequency == 14) {
             applySmoothPitchShift(audio, 1.25f);
         }
 
