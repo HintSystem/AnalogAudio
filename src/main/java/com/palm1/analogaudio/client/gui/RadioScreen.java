@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundManager;
@@ -28,6 +29,7 @@ import com.palm1.analogaudio.AnalogAudio;
 import com.palm1.analogaudio.inventory.RadioMenu;
 import com.palm1.analogaudio.network.packet.UpdateRadioSettingsC2SPacket;
 import com.palm1.analogaudio.registry.ModSounds;
+import com.palm1.analogaudio.registry.ModItems;
 import com.palm1.analogaudio.block.entity.RadioBlockEntity;
 
 public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
@@ -355,8 +357,24 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
     protected void renderSlot(GuiGraphics guiGraphics, Slot slot) {
         if (slot.container == this.menu.getBlockEntity().inventory) {
             ItemStack stack = slot.getItem();
-            if (!stack.isEmpty()) {
-                int menuIndex = this.menu.slots.indexOf(slot);
+            int menuIndex = this.menu.slots.indexOf(slot);
+            if (stack.isEmpty()) {
+                if (menuIndex == 1) {
+                    guiGraphics.pose().pushPose();
+                    guiGraphics.pose().translate(14 + 34, 29 + 22, 0);
+                    guiGraphics.pose().scale(4.0f, 4.0f, 1.0f);
+                    renderGhostItem(guiGraphics, ModItems.CASSETTE_TAPE.get().getDefaultInstance(), -8, -8,
+                            this.hoveredSlot == slot);
+                    guiGraphics.pose().popPose();
+                } else if (menuIndex == 0) {
+                    guiGraphics.pose().pushPose();
+                    guiGraphics.pose().translate(slot.x + 8, slot.y + 8, 0);
+                    guiGraphics.pose().scale(1.15f, 1.15f, 1.15f);
+                    renderGhostItem(guiGraphics, ModItems.CASSETTE_BAG.get().getDefaultInstance(), -8, -8,
+                            this.hoveredSlot == slot);
+                    guiGraphics.pose().popPose();
+                }
+            } else {
                 if (menuIndex == 1) {
                     guiGraphics.pose().pushPose();
                     guiGraphics.pose().translate(14 + 34, 29 + 22, 0);
@@ -375,5 +393,15 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
             }
         }
         super.renderSlot(guiGraphics, slot);
+    }
+
+    private void renderGhostItem(GuiGraphics guiGraphics, ItemStack stack, int x, int y, boolean hovered) {
+        float alpha = hovered ? 0.6f : 0.3f;
+        guiGraphics.setColor(1.0f, 1.0f, 1.0f, alpha);
+        guiGraphics.renderItem(stack, x, y);
+        if (hovered) {
+            guiGraphics.fill(RenderType.guiGhostRecipeOverlay(), x, y, x + 16, y + 16, 0x30FFFFFF);
+        }
+        guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
