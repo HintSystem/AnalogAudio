@@ -1,8 +1,17 @@
 {
   "neoforge:conditions": [
     {
-      "type": "neoforge:mod_loaded",
-      "modid": "voicechat"
+      "type": "neoforge:any",
+      "values": [
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "voicechat"
+        },
+        {
+          "type": "neoforge:mod_loaded",
+          "modid": "plasmovoice"
+        }
+      ]
     }
   ],
   "type": "minecraft:crafting_shaped",
