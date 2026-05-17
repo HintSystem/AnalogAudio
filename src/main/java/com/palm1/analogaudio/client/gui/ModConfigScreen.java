@@ -9,106 +9,119 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import com.palm1.analogaudio.client.audio.lavaplayer.LavaplayerLoader;
 import java.util.List;
 
 public class ModConfigScreen {
 
         public static Screen create(Screen parent) {
+                ConfigCategory.Builder clientCategory = ConfigCategory.createBuilder()
+                                .name(Component.translatable("config.analogaudio.category.client"))
+                                .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable(
+                                                                "config.analogaudio.enableCassetteAnimation"))
+                                                .description(OptionDescription.of(Component
+                                                                .translatable("config.analogaudio.enableCassetteAnimation.description")))
+                                                .binding(true, () -> ModConfig.Client.enableCassetteAnimation,
+                                                                val -> ModConfig.Client.enableCassetteAnimation = val)
+                                                .controller(TickBoxControllerBuilder::create)
+                                                .build())
+                                .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable(
+                                                                "config.analogaudio.enableSpeakerAnimation"))
+                                                .description(OptionDescription.of(Component
+                                                                .translatable("config.analogaudio.enableSpeakerAnimation.description")))
+                                                .binding(true, () -> ModConfig.Client.enableSpeakerAnimation,
+                                                                val -> ModConfig.Client.enableSpeakerAnimation = val)
+                                                .controller(TickBoxControllerBuilder::create)
+                                                .build())
+                                .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable(
+                                                                "config.analogaudio.renderCassetteText"))
+                                                .description(OptionDescription.of(Component
+                                                                .translatable("config.analogaudio.renderCassetteText.description")))
+                                                .binding(true, () -> ModConfig.Client.renderCassetteText,
+                                                                val -> ModConfig.Client.renderCassetteText = val)
+                                                .controller(TickBoxControllerBuilder::create)
+                                                .build())
+                                .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable(
+                                                                "config.analogaudio.enableSpatialAudio"))
+                                                .description(OptionDescription.of(Component
+                                                                .translatable("config.analogaudio.enableSpatialAudio.description")))
+                                                .binding(true, () -> ModConfig.Client.enableSpatialAudio,
+                                                                val -> ModConfig.Client.enableSpatialAudio = val)
+                                                .controller(TickBoxControllerBuilder::create)
+                                                .build())
+                                .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable(
+                                                                "config.analogaudio.speakerEcho"))
+                                                .description(OptionDescription.of(Component
+                                                                .translatable("config.analogaudio.speakerEcho.description")))
+                                                .binding(false, () -> ModConfig.Client.speakerEcho,
+                                                                val -> ModConfig.Client.speakerEcho = val)
+                                                .controller(TickBoxControllerBuilder::create)
+                                                .build())
+                                .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable(
+                                                                "config.analogaudio.enablePlayerSuppliedAudio"))
+                                                .description(OptionDescription.of(Component
+                                                                .translatable("config.analogaudio.enablePlayerSuppliedAudio.description")))
+                                                .binding(false, () -> ModConfig.Client.enablePlayerSuppliedAudio,
+                                                                val -> ModConfig.Client.enablePlayerSuppliedAudio = val)
+                                                .controller(TickBoxControllerBuilder::create)
+                                                .build())
+                                .option(Option.<Boolean>createBuilder()
+                                                .name(Component.translatable(
+                                                                "config.analogaudio.cassetteTapeDisclaimers"))
+                                                .description(OptionDescription.of(Component
+                                                                .translatable("config.analogaudio.cassetteTapeDisclaimers.description")))
+                                                .binding(true, () -> ModConfig.Client.cassetteTapeDisclaimers,
+                                                                val -> ModConfig.Client.cassetteTapeDisclaimers = val)
+                                                .controller(TickBoxControllerBuilder::create)
+                                                .build())
+                                .option(Option.<Float>createBuilder()
+                                                .name(Component.translatable(
+                                                                "config.analogaudio.spatialityThreshold"))
+                                                .description(OptionDescription.of(Component
+                                                                .translatable("config.analogaudio.spatialityThreshold.description")))
+                                                .binding(0.0f, () -> ModConfig.Client.spatialityThreshold,
+                                                                val -> ModConfig.Client.spatialityThreshold = val)
+                                                .controller(opt -> FloatSliderControllerBuilder
+                                                                .create(opt)
+                                                                .range(0.0f, 1.0f)
+                                                                .step(0.01f)
+                                                                .formatValue(v -> Component.literal(
+                                                                                (int) (v * 100) + "%")))
+                                                .build())
+                                .option(Option.<Float>createBuilder()
+                                                .name(Component.translatable(
+                                                                "config.analogaudio.globalRadioVolume"))
+                                                .description(OptionDescription.of(Component
+                                                                .translatable("config.analogaudio.globalRadioVolume.description")))
+                                                .binding(1.0f, () -> ModConfig.Client.globalRadioVolume,
+                                                                val -> ModConfig.Client.globalRadioVolume = val)
+                                                .controller(opt -> FloatSliderControllerBuilder
+                                                                .create(opt).range(0.0f, 2.0f)
+                                                                .step(0.01f)
+                                                                .formatValue(v -> Component.literal(
+                                                                                (int) (v * 100) + "%")))
+                                                .build());
+
+                if (LavaplayerLoader.isMissing()) {
+                        clientCategory.option(Option.<Boolean>createBuilder()
+                                        .name(Component.translatable("config.analogaudio.lavaplayerWelcomeScreen"))
+                                        .description(OptionDescription.of(Component
+                                                        .translatable("config.analogaudio.lavaplayerWelcomeScreen.description")))
+                                        .binding(true, () -> ModConfig.Client.lavaplayerWelcomeScreen,
+                                                        val -> ModConfig.Client.lavaplayerWelcomeScreen = val)
+                                        .controller(TickBoxControllerBuilder::create)
+                                        .build());
+                }
+
                 return YetAnotherConfigLib.createBuilder()
                                 .title(Component.translatable("config.analogaudio.title"))
-                                .category(ConfigCategory.createBuilder()
-                                                .name(Component.translatable("config.analogaudio.category.client"))
-                                                .option(Option.<Boolean>createBuilder()
-                                                                .name(Component.translatable(
-                                                                                "config.analogaudio.enableCassetteAnimation"))
-                                                                .description(OptionDescription.of(Component
-                                                                                .translatable("config.analogaudio.enableCassetteAnimation.description")))
-                                                                .binding(true, () -> ModConfig.Client.enableCassetteAnimation,
-                                                                                val -> ModConfig.Client.enableCassetteAnimation = val)
-                                                                .controller(TickBoxControllerBuilder::create)
-                                                                .build())
-                                                .option(Option.<Boolean>createBuilder()
-                                                                .name(Component.translatable(
-                                                                                "config.analogaudio.enableSpeakerAnimation"))
-                                                                .description(OptionDescription.of(Component
-                                                                                .translatable("config.analogaudio.enableSpeakerAnimation.description")))
-                                                                .binding(true, () -> ModConfig.Client.enableSpeakerAnimation,
-                                                                                val -> ModConfig.Client.enableSpeakerAnimation = val)
-                                                                .controller(TickBoxControllerBuilder::create)
-                                                                .build())
-                                                .option(Option.<Boolean>createBuilder()
-                                                                .name(Component.translatable(
-                                                                                "config.analogaudio.renderCassetteText"))
-                                                                .description(OptionDescription.of(Component
-                                                                                .translatable("config.analogaudio.renderCassetteText.description")))
-                                                                .binding(true, () -> ModConfig.Client.renderCassetteText,
-                                                                                val -> ModConfig.Client.renderCassetteText = val)
-                                                                .controller(TickBoxControllerBuilder::create)
-                                                                .build())
-                                                .option(Option.<Boolean>createBuilder()
-                                                                .name(Component.translatable(
-                                                                                "config.analogaudio.enableSpatialAudio"))
-                                                                .description(OptionDescription.of(Component
-                                                                                .translatable("config.analogaudio.enableSpatialAudio.description")))
-                                                                .binding(true, () -> ModConfig.Client.enableSpatialAudio,
-                                                                                val -> ModConfig.Client.enableSpatialAudio = val)
-                                                                .controller(TickBoxControllerBuilder::create)
-                                                                .build())
-                                                .option(Option.<Boolean>createBuilder()
-                                                                .name(Component.translatable(
-                                                                                "config.analogaudio.speakerEcho"))
-                                                                .description(OptionDescription.of(Component
-                                                                                .translatable("config.analogaudio.speakerEcho.description")))
-                                                                .binding(false, () -> ModConfig.Client.speakerEcho,
-                                                                                val -> ModConfig.Client.speakerEcho = val)
-                                                                .controller(TickBoxControllerBuilder::create)
-                                                                .build())
-                                                .option(Option.<Boolean>createBuilder()
-                                                                .name(Component.translatable(
-                                                                                "config.analogaudio.enablePlayerSuppliedAudio"))
-                                                                .description(OptionDescription.of(Component
-                                                                                .translatable("config.analogaudio.enablePlayerSuppliedAudio.description")))
-                                                                .binding(false, () -> ModConfig.Client.enablePlayerSuppliedAudio,
-                                                                                val -> ModConfig.Client.enablePlayerSuppliedAudio = val)
-                                                                .controller(TickBoxControllerBuilder::create)
-                                                                .build())
-                                                .option(Option.<Boolean>createBuilder()
-                                                                .name(Component.translatable(
-                                                                                "config.analogaudio.cassetteTapeDisclaimers"))
-                                                                .description(OptionDescription.of(Component
-                                                                                .translatable("config.analogaudio.cassetteTapeDisclaimers.description")))
-                                                                .binding(true, () -> ModConfig.Client.cassetteTapeDisclaimers,
-                                                                                val -> ModConfig.Client.cassetteTapeDisclaimers = val)
-                                                                .controller(TickBoxControllerBuilder::create)
-                                                                .build())
-                                                .option(Option.<Float>createBuilder()
-                                                                .name(Component.translatable(
-                                                                                "config.analogaudio.spatialityThreshold"))
-                                                                .description(OptionDescription.of(Component
-                                                                                .translatable("config.analogaudio.spatialityThreshold.description")))
-                                                                .binding(0.0f, () -> ModConfig.Client.spatialityThreshold,
-                                                                                val -> ModConfig.Client.spatialityThreshold = val)
-                                                                .controller(opt -> FloatSliderControllerBuilder
-                                                                                .create(opt)
-                                                                                .range(0.0f, 1.0f)
-                                                                                .step(0.01f)
-                                                                                .formatValue(v -> Component.literal(
-                                                                                                (int) (v * 100) + "%")))
-                                                                .build())
-                                                .option(Option.<Float>createBuilder()
-                                                                .name(Component.translatable(
-                                                                                "config.analogaudio.globalRadioVolume"))
-                                                                .description(OptionDescription.of(Component
-                                                                                .translatable("config.analogaudio.globalRadioVolume.description")))
-                                                                .binding(1.0f, () -> ModConfig.Client.globalRadioVolume,
-                                                                                val -> ModConfig.Client.globalRadioVolume = val)
-                                                                .controller(opt -> FloatSliderControllerBuilder
-                                                                                .create(opt).range(0.0f, 2.0f)
-                                                                                .step(0.01f)
-                                                                                .formatValue(v -> Component.literal(
-                                                                                                (int) (v * 100) + "%")))
-                                                                .build())
-                                                .build())
+                                .category(clientCategory.build())
                                 .category(ConfigCategory.createBuilder()
                                                 .name(Component.translatable("config.analogaudio.category.server"))
                                                 .option(ListOption.<String>createBuilder()

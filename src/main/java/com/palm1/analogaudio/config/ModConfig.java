@@ -71,7 +71,7 @@ public class ModConfig {
         public static boolean speakerEcho = false;
         public static boolean enablePlayerSuppliedAudio = false;
         public static boolean cassetteTapeDisclaimers = true;
-        public static boolean lavaplayerDisabled = false;
+        public static boolean lavaplayerWelcomeScreen = true;
         public static boolean lavaplayerDownloadAttempted = false;
     }
 
@@ -200,7 +200,7 @@ public class ModConfig {
                         case "speakerEcho" -> Client.speakerEcho = Boolean.parseBoolean(value);
                         case "enablePlayerSuppliedAudio" -> Client.enablePlayerSuppliedAudio = Boolean.parseBoolean(value);
                         case "cassetteTapeDisclaimers" -> Client.cassetteTapeDisclaimers = Boolean.parseBoolean(value);
-                        case "lavaplayerDisabled" -> Client.lavaplayerDisabled = Boolean.parseBoolean(value);
+                        case "lavaplayerWelcomeScreen" -> Client.lavaplayerWelcomeScreen = Boolean.parseBoolean(value);
                         case "lavaplayerDownloadAttempted" -> Client.lavaplayerDownloadAttempted = Boolean.parseBoolean(value);
                     }
                 } catch (Exception ex) {
@@ -344,10 +344,10 @@ public class ModConfig {
         lines.add("# " + t("config.analogaudio.cassetteTapeDisclaimers.description"));
         lines.add("cassetteTapeDisclaimers = " + Client.cassetteTapeDisclaimers);
         lines.add("");
-        lines.add("# Whether the user has disabled the Lavaplayer download prompt.");
-        lines.add("lavaplayerDisabled = " + Client.lavaplayerDisabled);
+        lines.add("# " + t("config.analogaudio.lavaplayerWelcomeScreen.description"));
+        lines.add("lavaplayerWelcomeScreen = " + Client.lavaplayerWelcomeScreen);
         lines.add("");
-        lines.add("# Whether a download attempt has been made.");
+        lines.add("# " + t("config.analogaudio.lavaplayerDownloadAttempted.description"));
         lines.add("lavaplayerDownloadAttempted = " + Client.lavaplayerDownloadAttempted);
 
         try {
