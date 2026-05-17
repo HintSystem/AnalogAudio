@@ -510,16 +510,32 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
         }
 
         ItemStack stack = this.menu.getSlot(0).getItem();
-        if (!ItemStack.matches(stack, lastTape)) {
+        CassetteData currentData = stack.get(ModDataComponents.CASSETTE_DATA.get());
+        CassetteData lastData = lastTape.get(ModDataComponents.CASSETTE_DATA.get());
+
+        boolean itemChanged = (stack.getItem() != lastTape.getItem());
+        boolean dataPresenceChanged = ((currentData == null) != (lastData == null));
+        boolean uuidChanged = (currentData != null && lastData != null
+                && !java.util.Objects.equals(currentData.uuid(), lastData.uuid()));
+        boolean urlChanged = (currentData != null && lastData != null
+                && !java.util.Objects.equals(currentData.url(), lastData.url()));
+        boolean nameChanged = (currentData != null && lastData != null
+                && !java.util.Objects.equals(currentData.name(), lastData.name()));
+
+        boolean isCurrentBlank = (currentData == null || (currentData.url().isEmpty() && currentData.name().isEmpty()));
+        boolean isLastBlank = (lastData == null || (lastData.url().isEmpty() && lastData.name().isEmpty()));
+        boolean bothBlank = isCurrentBlank && isLastBlank;
+        boolean dataChanged = dataPresenceChanged || uuidChanged || urlChanged || nameChanged;
+
+        if (itemChanged || (dataChanged && !bothBlank)) {
             lastTape = stack.copy();
             if (stack.isEmpty()) {
                 this.urlBox.setValue("");
                 this.nameBox.setValue("");
                 this.selectedColor = 0xFFFFFFFF;
             } else if (stack.is(ModItems.CASSETTE_TAPE.get())) {
-                CassetteData data = stack.get(ModDataComponents.CASSETTE_DATA.get());
-                if (data != null) {
-                    String url = data.url();
+                if (currentData != null) {
+                    String url = currentData.url();
                     if (url.startsWith("file:///")) {
                         String filename = url.substring(url.lastIndexOf('/') + 1);
                         String clientUrl = "client:" + filename;
@@ -527,14 +543,16 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                         url = clientUrl;
                     }
                     this.urlBox.setValue(url);
-                    this.nameBox.setValue(data.name());
-                    this.selectedColor = data.color();
+                    this.nameBox.setValue(currentData.name());
+                    this.selectedColor = currentData.color();
                 } else {
                     this.urlBox.setValue("");
                     this.nameBox.setValue("");
                     this.selectedColor = 0xFFFFFF;
                 }
             }
+        } else {
+            lastTape = stack.copy();
         }
     }
 
