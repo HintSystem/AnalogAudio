@@ -67,7 +67,6 @@ public final class LavaplayerWelcomeScreen extends Screen {
         bottomY += buttonHeight + 4;
         this.disableButton = this.addRenderableWidget(
                 Button.builder(Component.translatable("gui.analogaudio.welcome.decline"), btn -> {
-                    LavaplayerLoader.disable();
                     Minecraft.getInstance().setScreen(lastScreen);
                 })
                         .bounds(centerButton, bottomY, buttonWidth, buttonHeight)

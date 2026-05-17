@@ -37,7 +37,7 @@ public class AnalogAudioClientEvents {
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void onScreenInit(ScreenEvent.Init.Post event) {
-        if (!welcomeScreenShown && event.getScreen() instanceof TitleScreen && !ModConfig.Client.lavaplayerDisabled) {
+        if (!welcomeScreenShown && event.getScreen() instanceof TitleScreen && ModConfig.Client.lavaplayerWelcomeScreen) {
             if (LavaplayerLoader.isMissing()) {
                 welcomeScreenShown = true;
                 Screen currentScreen = Minecraft.getInstance().screen;

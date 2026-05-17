@@ -65,7 +65,7 @@ public class LavaplayerLoader {
     }
 
     public static void disable() {
-        ModConfig.Client.lavaplayerDisabled = true;
+        ModConfig.Client.lavaplayerWelcomeScreen = false;
         ModConfig.save();
     }
 
