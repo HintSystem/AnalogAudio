@@ -128,6 +128,16 @@ dependencies {
 }
 
 tasks.withType(ProcessResources).configureEach {
+    def supporterList = project.hasProperty('supporters') && !project.supporters.trim().isEmpty()
+        ? project.supporters.split(',').collect { it.trim() }
+        : []
+    def modCredits = "Special thanks to all of our amazing supporters!"
+    if (!supporterList.isEmpty()) {
+        def creditsHeader = "Made possible by my lovely supporters!"
+        def formattedSupporters = supporterList.collect { "- §6${it}§r" }.join("\n")
+        modCredits = creditsHeader + "\n" + formattedSupporters
+    }
+
     var replaceProperties = [
             minecraft_version      : minecraft_version,
             minecraft_version_range: minecraft_version_range,
@@ -137,14 +147,14 @@ tasks.withType(ProcessResources).configureEach {
             mod_name               : mod_name,
             mod_license            : mod_license,
             mod_version            : mod_version,
-            analogplayer_version   : analogplayer_version
+            analogplayer_version   : analogplayer_version,
+            mod_credits            : modCredits
     ]
     inputs.properties replaceProperties
 
     filesMatching(['META-INF/neoforge.mods.toml', 'lavaplayer.properties']) {
         expand replaceProperties
     }
-    
 }
 
 publishing {
@@ -196,4 +206,42 @@ tasks.named('jar', Jar).configure {
 tasks.named('jarJar', net.neoforged.gradle.common.tasks.JarJar).configure {
     from tasks.named('jar')
     archiveClassifier = ''
+}
+
+tasks.register('generateChangelog') {
+    group = 'publishing'
+    description = 'Generates a changelog for GitHub releases including supporter credits.'
+    
+    def supporterList = project.hasProperty('supporters') && !project.supporters.trim().isEmpty()
+        ? project.supporters.split(',').collect { it.trim() }
+        : []
+    def projectVersion = project.version.toString()
+    def changelogFile = project.layout.buildDirectory.file("github_changelog.md")
+
+    doLast {
+        def commitMsg = ""
+        try {
+            def stdout = new ByteArrayOutputStream()
+            exec {
+                commandLine 'git', 'log', '-1', '--pretty=%B'
+                standardOutput = stdout
+            }
+            commitMsg = stdout.toString().trim()
+        } catch (Exception e) {
+            commitMsg = "Release of version ${projectVersion}"
+        }
+        
+        def changelog = commitMsg
+        if (!supporterList.isEmpty()) {
+            def formattedSupporters = supporterList.collect { "**${it}**" }.join(", ")
+            changelog += "\n\nThank you to my lovely supporters: ${formattedSupporters}"
+        }
+        
+        def fileObj = changelogFile.get().asFile
+        fileObj.parentFile.mkdirs()
+        fileObj.text = changelog
+    }
+}
+tasks.named('build') {
+    dependsOn 'generateChangelog'
 }

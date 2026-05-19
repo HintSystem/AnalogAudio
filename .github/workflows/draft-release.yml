@@ -79,7 +79,7 @@ jobs:
           target_commitish: ${{ github.ref_name }}
           tag_name: ${{ steps.check_version.outputs.version }}
           name: "${{ steps.check_version.outputs.mod_name }} ${{ steps.check_version.outputs.mod_version }}"
-          body: ${{ github.event.head_commit.message }}
+          body_path: build/github_changelog.md
           files: |
             build/libs/${{ steps.check_version.outputs.mod_name_dashed }}-${{ steps.check_version.outputs.mod_version }}.jar
         env:
