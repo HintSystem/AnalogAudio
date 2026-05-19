@@ -32,7 +32,7 @@ public class CommonAudioProcessor {
 
             float volume = rms * 2.0f;
 
-            for (SpeakerInstance speaker : SpeakerManager.getSpeakersOnFrequency(signal.frequency)) {
+            for (SpeakerInstance speaker : SpeakerManager.getSpeakersOnFrequency(signal.frequency, true)) {
                 if (speaker.getPosition().distanceToSqr(signal.pos) < 1.0) {
                     if (speaker instanceof SpeakerBlockEntity sbe && sbe.getLevel().isClientSide()) {
                         sbe.setScale(1.0f + volume);

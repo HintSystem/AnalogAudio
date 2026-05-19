@@ -56,7 +56,7 @@ public class VoiceAudioRouter {
             });
         }
 
-        Set<SpeakerInstance> speakers = SpeakerManager.getSpeakersOnFrequency(activeFrequency);
+        Set<SpeakerInstance> speakers = SpeakerManager.getSpeakersOnFrequency(activeFrequency, false);
         for (SpeakerInstance speaker : speakers) {
             if (speaker.getLevel() == null)
                 continue;
