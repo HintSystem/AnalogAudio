@@ -46,7 +46,7 @@ public class LavaplayerLoader {
 
                 Path target = cacheDir.resolve("analogplayer-" + VERSION + ".jar");
                 FileDownloader.download(
-                        ("https://github.com/palmmc/analogplayer/releases/latest/download/analogplayer-"
+                        ("https://github.com/palmmc/analogplayer/releases/download/" + VERSION + "/analogplayer-"
                                 + VERSION + ".jar"),
                         target, "AnalogAudio/1.0", progressCallback);
 
