@@ -180,8 +180,17 @@ public class ClientAudioEngine {
         } else {
             FAILED.add(identity);
             if (LavaplayerLoader.isMissing()) {
-                AnalogAudio.LOGGER.warn(
-                        "Audio playback skipped. Please install dependency analogplayer: https://github.com/palmmc/analogplayer/releases");
+                if (ModConfig.Client.lavaplayerWelcomeScreen) {
+                    AnalogAudio.LOGGER.warn(
+                            "Audio playback skipped. Please install dependency analogplayer: https://github.com/palmmc/analogplayer/releases to your '.analogaudio/internal' folder.");
+                    Minecraft mc = Minecraft.getInstance();
+                    if (mc.player != null) {
+                        mc.player.displayClientMessage(
+                                Component.translatable("gui.analogaudio.analogplayer_missing")
+                                        .withStyle(ChatFormatting.RED),
+                                true);
+                    }
+                }
             }
         }
     }

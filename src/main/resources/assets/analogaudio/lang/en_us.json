@@ -78,6 +78,7 @@
   "gui.analogaudio.welcome.success": "Analogplayer installed successfully!",
   "gui.analogaudio.welcome.continue": "Continue",
   "gui.analogaudio.welcome.retry": "Retry download",
+  "gui.analogaudio.analogplayer_missing": "Analogplayer is not installed, audio is unable to play.",
   // Tooltip Translations
   "tooltip.analogaudio.walkie_talkie.frequency": "Frequency: %s",
   "tooltip.analogaudio.description.walkie_talkie": "Transmits voice input to other devices on the same frequency.\n\nHold %s to change frequency.",
