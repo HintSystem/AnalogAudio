@@ -18,9 +18,21 @@ public class ModPermissions {
             PermissionTypes.BOOLEAN,
             (player, uuid, context) -> false);
 
+    public static final PermissionNode<Boolean> CASSETTE_WRITE = new PermissionNode<>(
+            AnalogAudio.MODID,
+            "command.cassette.write",
+            PermissionTypes.BOOLEAN,
+            (player, uuid, context) -> false);
+
+    public static final PermissionNode<Boolean> CASSETTE_PLAYLIST = new PermissionNode<>(
+            AnalogAudio.MODID,
+            "command.cassette.playlist",
+            PermissionTypes.BOOLEAN,
+            (player, uuid, context) -> false);
+
     @SubscribeEvent
     public static void onPermissionGather(PermissionGatherEvent.Nodes event) {
-        event.addNodes(UPLOAD_FILES);
+        event.addNodes(UPLOAD_FILES, CASSETTE_WRITE, CASSETTE_PLAYLIST);
     }
 
     public static boolean canUploadFiles(ServerPlayer player) {
