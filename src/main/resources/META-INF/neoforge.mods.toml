@@ -11,7 +11,7 @@ displayName="${mod_name}"
 mixins=["analogaudio.mixins.json"]
 logoFile="icon.png"
 authors="palm1"
-credits="${mod_credits}"
+credits='''${mod_credits}'''
 description='''
 Bring the warm comfort of analog audio mediums to your world!
 '''
