@@ -16,7 +16,7 @@ public class LavaplayerLoader {
     private static ClassLoader classLoader;
     private static boolean downloadTriggered = false;
 
-    private static final String VERSION = "1.0.0";
+    private static final String VERSION = "1.0.1";
 
     public static String getVersion() {
         return VERSION;
