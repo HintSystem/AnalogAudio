@@ -131,7 +131,7 @@ tasks.withType(ProcessResources).configureEach {
     def supporterList = project.hasProperty('supporters') && !project.supporters.trim().isEmpty()
         ? project.supporters.split(',').collect { it.trim() }
         : []
-    def modCredits = "Special thanks to all of our amazing supporters!"
+    def modCredits = ""
     if (!supporterList.isEmpty()) {
         def creditsHeader = "Made possible by my lovely supporters!"
         def formattedSupporters = supporterList.collect { "- §6${it}§r" }.join("\n")
@@ -234,7 +234,7 @@ tasks.register('generateChangelog') {
         def changelog = commitMsg
         if (!supporterList.isEmpty()) {
             def formattedSupporters = supporterList.collect { "**${it}**" }.join(", ")
-            changelog += "\n\nThank you to my lovely supporters: ${formattedSupporters}"
+            changelog += "\n\nThank you to my lovely supporters on Ko-fi: ${formattedSupporters}"
         }
         
         def fileObj = changelogFile.get().asFile
