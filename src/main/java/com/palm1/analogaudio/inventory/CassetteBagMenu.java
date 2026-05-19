@@ -9,13 +9,16 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.SimpleContainer;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CassetteBagMenu extends AbstractContainerMenu {
-    private final ItemStack bagStack;
+    private final Inventory playerInventory;
+    private final int bagSlotIndex;
     private final SimpleContainer inventory;
 
     public CassetteBagMenu(int id, Inventory playerInventory) {
@@ -25,8 +28,13 @@ public class CassetteBagMenu extends AbstractContainerMenu {
     }
 
     public CassetteBagMenu(int id, Inventory playerInventory, ItemStack bagStack) {
+        this(id, playerInventory, findBagSlot(playerInventory, bagStack));
+    }
+
+    public CassetteBagMenu(int id, Inventory playerInventory, int bagSlotIndex) {
         super(ModMenus.CASSETTE_BAG_MENU.get(), id);
-        this.bagStack = bagStack;
+        this.playerInventory = playerInventory;
+        this.bagSlotIndex = bagSlotIndex;
         this.inventory = new SimpleContainer(18) {
             @Override
             public boolean canPlaceItem(int index, ItemStack stack) {
@@ -34,10 +42,16 @@ public class CassetteBagMenu extends AbstractContainerMenu {
             }
         };
 
-        List<ItemStack> contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
-        if (contents != null) {
-            for (int i = 0; i < Math.min(contents.size(), 18); i++) {
-                inventory.setItem(i, contents.get(i).copy());
+        if (bagSlotIndex >= 0) {
+            ItemStack bagStack = playerInventory.getItem(bagSlotIndex);
+            if (!bagStack.isEmpty()) {
+                ItemContainerContents contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
+                if (contents != null) {
+                    List<ItemStack> itemStacks = contents.stream().toList();
+                    for (int i = 0; i < Math.min(itemStacks.size(), 18); i++) {
+                        inventory.setItem(i, itemStacks.get(i).copy());
+                    }
+                }
             }
         }
 
@@ -48,7 +62,7 @@ public class CassetteBagMenu extends AbstractContainerMenu {
                 this.addSlot(new Slot(inventory, j + i * 9, 8 + j * 18, 17 + i * 18) {
                     @Override
                     public boolean mayPlace(ItemStack stack) {
-                        return container.canPlaceItem(getSlotIndex(), stack);
+                        return inventory.canPlaceItem(getSlotIndex(), stack);
                     }
                 });
             }
@@ -69,12 +83,46 @@ public class CassetteBagMenu extends AbstractContainerMenu {
         }
     }
 
-    private void saveContents() {
-        List<ItemStack> contents = new ArrayList<>();
-        for (int i = 0; i < 18; i++) {
-            contents.add(inventory.getItem(i).copy());
+    private static int findBagSlot(Inventory playerInventory, ItemStack bagStack) {
+        for (int i = 0; i < playerInventory.getContainerSize(); i++) {
+            if (playerInventory.getItem(i) == bagStack) {
+                return i;
+            }
         }
-        bagStack.set(ModDataComponents.BAG_CONTENTS.get(), contents);
+        for (int i = 0; i < playerInventory.getContainerSize(); i++) {
+            if (ItemStack.isSameItemSameComponents(playerInventory.getItem(i), bagStack)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void saveContents() {
+        if (bagSlotIndex >= 0) {
+            ItemStack bagStack = playerInventory.getItem(bagSlotIndex);
+            if (bagStack.is(ModItems.CASSETTE_BAG.get())) {
+                List<ItemStack> contents = new ArrayList<>();
+                for (int i = 0; i < 18; i++) {
+                    contents.add(inventory.getItem(i).copy());
+                }
+                bagStack.set(ModDataComponents.BAG_CONTENTS.get(), ItemContainerContents.fromItems(contents));
+            }
+        }
+    }
+
+    private boolean isBagSlot(Slot slot) {
+        return slot != null && slot.container == playerInventory && slot.getSlotIndex() == bagSlotIndex;
+    }
+
+    @Override
+    public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        if (slotId >= 0 && slotId < this.slots.size()) {
+            Slot slot = this.slots.get(slotId);
+            if (isBagSlot(slot)) {
+                return;
+            }
+        }
+        super.clicked(slotId, button, clickType, player);
     }
 
     @Override
@@ -109,7 +157,11 @@ public class CassetteBagMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return !bagStack.isEmpty() && (player.getMainHandItem() == bagStack || player.getOffhandItem() == bagStack);
+        if (bagSlotIndex < 0) {
+            return false;
+        }
+        ItemStack bagStack = player.getInventory().getItem(bagSlotIndex);
+        return !bagStack.isEmpty() && bagStack.is(ModItems.CASSETTE_BAG.get());
     }
 
     @Override

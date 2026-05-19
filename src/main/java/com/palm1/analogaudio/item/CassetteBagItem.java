@@ -25,9 +25,8 @@ public class CassetteBagItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide) {
             player.openMenu(new SimpleMenuProvider(
-                (id, inv, p) -> new CassetteBagMenu(id, inv, stack),
-                Component.translatable("item.analogaudio.cassette_bag")
-            ));
+                    (id, inv, p) -> new CassetteBagMenu(id, inv, stack),
+                    Component.translatable("item.analogaudio.cassette_bag")));
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
@@ -35,15 +34,16 @@ public class CassetteBagItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
-        List<ItemStack> contents = stack.get(ModDataComponents.BAG_CONTENTS.get());
+        net.minecraft.world.item.component.ItemContainerContents contents = stack.get(ModDataComponents.BAG_CONTENTS.get());
         int count = 0;
         if (contents != null) {
-            for (ItemStack s : contents) {
+            for (ItemStack s : contents.stream().toList()) {
                 if (!s.isEmpty()) {
                     count++;
                 }
             }
         }
-        tooltip.add(Component.translatable("tooltip.analogaudio.cassette_bag.count", count).withStyle(ChatFormatting.GRAY));
+        tooltip.add(
+                Component.translatable("tooltip.analogaudio.cassette_bag.count", count).withStyle(ChatFormatting.GRAY));
     }
 }
