@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.Direction;
 
+import net.minecraft.world.item.component.ItemContainerContents;
 import org.jetbrains.annotations.Nullable;
 
 import com.palm1.analogaudio.inventory.RadioMenu;
@@ -198,11 +199,12 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
                                 0.5f, 1.0f);
 
                         if (this.shuffle) {
-                            List<ItemStack> contents = currentBag.get(ModDataComponents.BAG_CONTENTS.get());
+                            ItemContainerContents contents = currentBag.get(ModDataComponents.BAG_CONTENTS.get());
                             if (contents != null) {
+                                List<ItemStack> itemStacks = contents.stream().toList();
                                 List<Integer> validIndices = new ArrayList<>();
-                                for (int i = 0; i < contents.size(); i++) {
-                                    if (contents.get(i).has(ModDataComponents.CASSETTE_DATA.get())) {
+                                for (int i = 0; i < itemStacks.size(); i++) {
+                                    if (itemStacks.get(i).has(ModDataComponents.CASSETTE_DATA.get())) {
                                         validIndices.add(i);
                                     }
                                 }
@@ -232,14 +234,9 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
 
             boolean hasData = false;
             if (!currentBag.isEmpty()) {
-                List<ItemStack> contents = currentBag.get(ModDataComponents.BAG_CONTENTS.get());
-                if (contents != null && !contents.isEmpty()) {
-                    for (ItemStack s : contents) {
-                        if (s.has(ModDataComponents.CASSETTE_DATA.get())) {
-                            hasData = true;
-                            break;
-                        }
-                    }
+                ItemContainerContents contents = currentBag.get(ModDataComponents.BAG_CONTENTS.get());
+                if (contents != null && contents.stream().anyMatch(s -> s.has(ModDataComponents.CASSETTE_DATA.get()))) {
+                    hasData = true;
                 }
             } else if (!currentCassette.isEmpty()) {
                 hasData = currentCassette.has(ModDataComponents.CASSETTE_DATA.get());
@@ -343,13 +340,17 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
             return;
         }
 
-        List<ItemStack> contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
-        if (contents == null || contents.isEmpty())
+        ItemContainerContents contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
+        if (contents == null)
+            return;
+
+        List<ItemStack> itemStacks = contents.stream().toList();
+        if (itemStacks.isEmpty())
             return;
 
         List<Integer> validIndices = new ArrayList<>();
-        for (int i = 0; i < contents.size(); i++) {
-            if (contents.get(i).has(ModDataComponents.CASSETTE_DATA.get()))
+        for (int i = 0; i < itemStacks.size(); i++) {
+            if (itemStacks.get(i).has(ModDataComponents.CASSETTE_DATA.get()))
                 validIndices.add(i);
         }
 
@@ -416,14 +417,9 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
                 ItemStack currentCassette = cassetteStack;
                 ItemStack currentBag = bagStack;
                 if (!currentBag.isEmpty()) {
-                    List<ItemStack> contents = currentBag.get(ModDataComponents.BAG_CONTENTS.get());
-                    if (contents != null && !contents.isEmpty()) {
-                        for (ItemStack s : contents) {
-                            if (s.has(ModDataComponents.CASSETTE_DATA.get())) {
-                                hasData = true;
-                                break;
-                            }
-                        }
+                    ItemContainerContents contents = currentBag.get(ModDataComponents.BAG_CONTENTS.get());
+                    if (contents != null && contents.stream().anyMatch(s -> s.has(ModDataComponents.CASSETTE_DATA.get()))) {
+                        hasData = true;
                     }
                 } else if (!currentCassette.isEmpty()) {
                     hasData = currentCassette.has(ModDataComponents.CASSETTE_DATA.get());
@@ -547,11 +543,14 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
 
     public ItemStack getCassette() {
         if (!bagStack.isEmpty() && bagStack.is(ModItems.CASSETTE_BAG.get())) {
-            List<ItemStack> contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
-            if (contents != null && playlistIndex >= 0 && playlistIndex < contents.size()) {
-                ItemStack cassette = contents.get(playlistIndex);
-                if (cassette.has(ModDataComponents.CASSETTE_DATA.get()))
-                    return cassette;
+            ItemContainerContents contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
+            if (contents != null) {
+                List<ItemStack> itemStacks = contents.stream().toList();
+                if (playlistIndex >= 0 && playlistIndex < itemStacks.size()) {
+                    ItemStack cassette = itemStacks.get(playlistIndex);
+                    if (cassette.has(ModDataComponents.CASSETTE_DATA.get()))
+                        return cassette;
+                }
             }
         }
         return cassetteStack;
@@ -649,11 +648,11 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
                                 oldData.duration(), oldData.authorUuid()));
 
                 if (isPlayingFromBag()) {
-                    List<ItemStack> contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
+                    ItemContainerContents contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
                     if (contents != null) {
-                        List<ItemStack> newContents = new ArrayList<>(contents);
+                        List<ItemStack> newContents = new ArrayList<>(contents.stream().toList());
                         newContents.set(playlistIndex, playingStack);
-                        bagStack.set(ModDataComponents.BAG_CONTENTS.get(), newContents);
+                        bagStack.set(ModDataComponents.BAG_CONTENTS.get(), ItemContainerContents.fromItems(newContents));
                     }
                 }
                 setChanged();
@@ -674,11 +673,11 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
                                 oldData.duration(), oldData.authorUuid()));
 
                 if (isPlayingFromBag()) {
-                    List<ItemStack> contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
+                    ItemContainerContents contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
                     if (contents != null) {
-                        List<ItemStack> newContents = new ArrayList<>(contents);
+                        List<ItemStack> newContents = new ArrayList<>(contents.stream().toList());
                         newContents.set(playlistIndex, playingStack);
-                        bagStack.set(ModDataComponents.BAG_CONTENTS.get(), newContents);
+                        bagStack.set(ModDataComponents.BAG_CONTENTS.get(), ItemContainerContents.fromItems(newContents));
                     }
                 }
                 setChanged();

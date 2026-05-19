@@ -18,6 +18,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
 import net.neoforged.neoforge.server.permission.PermissionAPI;
 
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public class CassettePlaylistCommand {
                     count++;
                 }
 
-                bag.set(ModDataComponents.BAG_CONTENTS.get(), cassettes);
+                bag.set(ModDataComponents.BAG_CONTENTS.get(), ItemContainerContents.fromItems(cassettes));
 
                 boolean added = player.getInventory().add(bag);
                 if (!added) {
