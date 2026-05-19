@@ -8,7 +8,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.palm1.analogaudio.AnalogAudio;
 
 public class SpeakerManager {
-    private static final ConcurrentHashMap<Integer, Set<SpeakerInstance>> SPEAKERS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Integer, Set<SpeakerInstance>> CLIENT_SPEAKERS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Integer, Set<SpeakerInstance>> SERVER_SPEAKERS = new ConcurrentHashMap<>();
+
+    private static ConcurrentHashMap<Integer, Set<SpeakerInstance>> getMap(SpeakerInstance speaker) {
+        if (speaker.getLevel() != null && speaker.getLevel().isClientSide()) {
+            return CLIENT_SPEAKERS;
+        } else {
+            return SERVER_SPEAKERS;
+        }
+    }
 
     public static void addSpeaker(SpeakerInstance speaker) {
         int freq = speaker.getFrequency();
@@ -16,34 +25,36 @@ public class SpeakerManager {
         String className = speaker.getClass().getSimpleName();
         AnalogAudio.LOGGER
                 .info("Registering Speaker | Type: {} | Identity: {} | Freq: {}", className, id, freq);
-        SPEAKERS.computeIfAbsent(freq, k -> Collections.synchronizedSet(new HashSet<>())).add(speaker);
+        getMap(speaker).computeIfAbsent(freq, k -> Collections.synchronizedSet(new HashSet<>())).add(speaker);
     }
 
     public static void removeSpeaker(SpeakerInstance speaker) {
-        Set<SpeakerInstance> set = SPEAKERS.get(speaker.getFrequency());
+        ConcurrentHashMap<Integer, Set<SpeakerInstance>> map = getMap(speaker);
+        Set<SpeakerInstance> set = map.get(speaker.getFrequency());
         if (set != null) {
             set.remove(speaker);
             AnalogAudio.LOGGER.info("Unregistering Speaker | Identity: {}",
                     speaker.getIdentity());
             if (set.isEmpty()) {
-                SPEAKERS.remove(speaker.getFrequency());
+                map.remove(speaker.getFrequency());
             }
         }
     }
 
-    public static Set<SpeakerInstance> getSpeakersOnFrequency(int frequency) {
-        return SPEAKERS.getOrDefault(frequency, Collections.emptySet());
+    public static Set<SpeakerInstance> getSpeakersOnFrequency(int frequency, boolean clientSide) {
+        return (clientSide ? CLIENT_SPEAKERS : SERVER_SPEAKERS).getOrDefault(frequency, Collections.emptySet());
     }
 
     public static void updateSpeakerFrequency(SpeakerInstance speaker, int oldFreq, int newFreq) {
-        Set<SpeakerInstance> oldSet = SPEAKERS.get(oldFreq);
+        ConcurrentHashMap<Integer, Set<SpeakerInstance>> map = getMap(speaker);
+        Set<SpeakerInstance> oldSet = map.get(oldFreq);
         if (oldSet != null) {
             oldSet.remove(speaker);
             if (oldSet.isEmpty()) {
-                SPEAKERS.remove(oldFreq);
+                map.remove(oldFreq);
             }
         }
-        SPEAKERS.computeIfAbsent(newFreq, k -> Collections.synchronizedSet(new HashSet<>())).add(speaker);
+        map.computeIfAbsent(newFreq, k -> Collections.synchronizedSet(new HashSet<>())).add(speaker);
     }
 
     public static void addDynamicSpeaker(SpeakerInstance speaker) {

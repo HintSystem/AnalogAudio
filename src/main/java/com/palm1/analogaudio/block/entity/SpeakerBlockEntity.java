@@ -79,9 +79,16 @@ public class SpeakerBlockEntity extends BlockEntity implements SpeakerInstance {
 
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        int oldFreq = this.frequency;
         super.loadAdditional(tag, registries);
         if (tag.contains("Frequency")) {
-            this.frequency = tag.getInt("Frequency");
+            int newFreq = tag.getInt("Frequency");
+            if (this.level != null && oldFreq != newFreq) {
+                this.frequency = newFreq;
+                SpeakerManager.updateSpeakerFrequency(this, oldFreq, newFreq);
+            } else {
+                this.frequency = newFreq;
+            }
         }
     }
 
