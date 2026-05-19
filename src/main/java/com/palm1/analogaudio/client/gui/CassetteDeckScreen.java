@@ -342,20 +342,21 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
 
         ImageButton browseBtn = new ImageButton(this.leftPos + 44, this.topPos + 67, 18, 18,
                 new WidgetSprites(BROWSE_NORMAL, BROWSE_NORMAL), button -> {
-                    PointerBuffer filters = MemoryUtil.memAllocPointer(6);
+                    PointerBuffer filters = MemoryUtil.memAllocPointer(7);
                     filters.put(MemoryUtil.memUTF8("*.ogg"));
                     filters.put(MemoryUtil.memUTF8("*.mp3"));
                     filters.put(MemoryUtil.memUTF8("*.wav"));
                     filters.put(MemoryUtil.memUTF8("*.flac"));
                     filters.put(MemoryUtil.memUTF8("*.aac"));
                     filters.put(MemoryUtil.memUTF8("*.m4a"));
+                    filters.put(MemoryUtil.memUTF8("*.opus"));
                     filters.flip();
 
                     String path = TinyFileDialogs.tinyfd_openFileDialog(
                             Component.translatable("gui.analogaudio.cassette_deck.browse").getString(),
                             "",
                             filters,
-                            "Audio Files (*.ogg, *.mp3, *.wav, *.flac, *.aac, *.m4a)",
+                            "Audio Files (*.ogg, *.mp3, *.wav, *.flac, *.aac, *.m4a, *.opus)",
                             false);
 
                     org.lwjgl.system.MemoryUtil.memFree(filters);
@@ -474,7 +475,8 @@ public class CassetteDeckScreen extends AbstractContainerScreen<CassetteDeckMenu
                     lower.endsWith(".wav") || lower.contains(".wav?") ||
                     lower.endsWith(".flac") || lower.contains(".flac?") ||
                     lower.endsWith(".aac") || lower.contains(".aac?") ||
-                    lower.endsWith(".m4a") || lower.contains(".m4a?")) {
+                    lower.endsWith(".m4a") || lower.contains(".m4a?") ||
+                    lower.endsWith(".opus") || lower.contains(".opus?")) {
                 return UrlValidationResult.ALLOWED;
             }
             return match ? UrlValidationResult.ALLOWED : UrlValidationResult.DISALLOWED;

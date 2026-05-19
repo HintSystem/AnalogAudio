@@ -58,7 +58,7 @@ public class ModConfig {
         public static int port = 7000;
         public static long maxFileSize = 50;
         public static List<String> allowedFileFormats = new ArrayList<>(
-                Arrays.asList("ogg", "mp3", "wav", "flac", "aac", "m4a"));
+                Arrays.asList("ogg", "mp3", "wav", "flac", "aac", "m4a", "opus"));
     }
 
     public static class Client {
