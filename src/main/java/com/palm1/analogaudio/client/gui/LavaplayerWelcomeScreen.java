@@ -25,10 +25,16 @@ public final class LavaplayerWelcomeScreen extends Screen {
     private MultiLineLabel messageLabel;
 
     public LavaplayerWelcomeScreen(final Screen lastScreen) {
-        super(Component.translatable("gui.analogaudio.welcome.title").withStyle(ChatFormatting.GOLD,
+        super(Component.translatable(LavaplayerLoader.hasOlderVersion() ? "gui.analogaudio.update.title" : "gui.analogaudio.welcome.title").withStyle(ChatFormatting.GOLD,
                 ChatFormatting.BOLD));
         this.lastScreen = lastScreen;
-        this.messageText = Component.translatable("gui.analogaudio.welcome.message", LavaplayerLoader.getVersion());
+        
+        Component baseMessage = Component.translatable("gui.analogaudio.welcome.message");
+        Component secondMessage = Component.translatable(
+                LavaplayerLoader.hasOlderVersion() ? "gui.analogaudio.update.message2" : "gui.analogaudio.welcome.message2",
+                LavaplayerLoader.getVersion());
+        
+        this.messageText = Component.empty().append(baseMessage).append("\n\n").append(secondMessage);
         this.ticksUntilEnable = 40;
     }
 

@@ -50,6 +50,8 @@ public class LavaplayerLoader {
                                 + VERSION + ".jar"),
                         target, "AnalogAudio/1.0", progressCallback);
 
+                deleteOldVersions(cacheDir);
+
                 if (resultCallback != null)
                     resultCallback.accept(true);
 
@@ -78,6 +80,23 @@ public class LavaplayerLoader {
         return Files.exists(cacheDir.resolve("analogplayer-" + VERSION + ".jar"));
     }
 
+    public static boolean hasOlderVersion() {
+        try {
+            Path cacheDir = Minecraft.getInstance().gameDirectory.toPath().resolve(".analogaudio/internal");
+            if (Files.isDirectory(cacheDir)) {
+                try (var stream = Files.list(cacheDir)) {
+                    return stream.anyMatch(path -> {
+                        String name = path.getFileName().toString();
+                        return name.startsWith("analogplayer") && name.endsWith(".jar")
+                                && !name.equals("analogplayer-" + VERSION + ".jar");
+                    });
+                }
+            }
+        } catch (Exception e) {
+        }
+        return false;
+    }
+
     public static IRadioStreamer getUtilityStreamer() {
         return getStreamer();
     }
@@ -102,11 +121,34 @@ public class LavaplayerLoader {
             Path cacheDir = Minecraft.getInstance().gameDirectory.toPath().resolve(".analogaudio/internal");
             Path libJar = cacheDir.resolve("analogplayer-" + VERSION + ".jar");
 
+            deleteOldVersions(cacheDir);
+
             classLoader = new URLClassLoader(
                     new URL[] { libJar.toUri().toURL() },
                     LavaplayerLoader.class.getClassLoader());
         } catch (Exception e) {
             AnalogAudio.LOGGER.error("Failed to load AnalogPlayer library", e);
+        }
+    }
+
+    private static void deleteOldVersions(Path cacheDir) {
+        try {
+            if (Files.isDirectory(cacheDir)) {
+                try (var stream = Files.list(cacheDir)) {
+                    stream.forEach(path -> {
+                        try {
+                            String name = path.getFileName().toString();
+                            if (name.startsWith("analogplayer") && name.endsWith(".jar")
+                                    && !name.equals("analogplayer-" + VERSION + ".jar")) {
+                                Files.deleteIfExists(path);
+                                AnalogAudio.LOGGER.info("Deleted old analogplayer jar: " + name);
+                            }
+                        } catch (Exception e) {
+                        }
+                    });
+                }
+            }
+        } catch (Exception e) {
         }
     }
 }

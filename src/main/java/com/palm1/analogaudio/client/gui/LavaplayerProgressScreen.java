@@ -19,7 +19,7 @@ public final class LavaplayerProgressScreen extends Screen {
     private Button proceedButton;
 
     public LavaplayerProgressScreen(Screen lastScreen) {
-        super(Component.translatable("gui.analogaudio.welcome.title").withStyle(ChatFormatting.GOLD,
+        super(Component.translatable(LavaplayerLoader.hasOlderVersion() ? "gui.analogaudio.update.title" : "gui.analogaudio.welcome.title").withStyle(ChatFormatting.GOLD,
                 ChatFormatting.BOLD));
         this.lastScreen = lastScreen;
     }
