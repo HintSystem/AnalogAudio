@@ -246,7 +246,7 @@ public class AnalogAudioNetwork {
         context.enqueueWork(() -> {
             BlockEntity be = context.player().level().getBlockEntity(data.pos());
             if (be instanceof RadioBlockEntity radio) {
-                radio.setSettings(data.volume(), data.looping(), data.playing(), data.shuffle());
+                radio.setSettings(data.volume(), data.looping(), data.playing(), data.shuffle(), data.resetCassetteVolume());
             }
         });
     }

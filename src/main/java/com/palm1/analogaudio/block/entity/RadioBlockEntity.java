@@ -270,6 +270,10 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
     }
 
     public void setSettings(float volume, boolean looping, boolean playing, boolean shuffle) {
+        setSettings(volume, looping, playing, shuffle, false);
+    }
+
+    public void setSettings(float volume, boolean looping, boolean playing, boolean shuffle, boolean resetCassetteVolume) {
         boolean loopStarted = !this.looping && looping;
         boolean hasData = hasData();
         if (playing && !hasData) {
@@ -302,7 +306,11 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
             }
         }
         this.shuffle = shuffle;
-        saveVolumeToCassette();
+        if (resetCassetteVolume) {
+            resetVolumeOnCassette();
+        } else {
+            saveVolumeToCassette();
+        }
         updatePowerState();
         updateComparator();
         updateAndSync();
@@ -638,6 +646,31 @@ public class RadioBlockEntity extends BlockEntity implements MenuProvider, World
             if (oldData != null) {
                 playingStack.set(ModDataComponents.CASSETTE_DATA.get(),
                         new CassetteData(oldData.uuid(), oldData.url(), oldData.name(), oldData.color(), this.volume,
+                                oldData.duration(), oldData.authorUuid()));
+
+                if (isPlayingFromBag()) {
+                    List<ItemStack> contents = bagStack.get(ModDataComponents.BAG_CONTENTS.get());
+                    if (contents != null) {
+                        List<ItemStack> newContents = new ArrayList<>(contents);
+                        newContents.set(playlistIndex, playingStack);
+                        bagStack.set(ModDataComponents.BAG_CONTENTS.get(), newContents);
+                    }
+                }
+                setChanged();
+            }
+        }
+    }
+
+    private void resetVolumeOnCassette() {
+        if (this.level == null || this.level.isClientSide())
+            return;
+
+        ItemStack playingStack = getCassette();
+        if (!playingStack.isEmpty() && playingStack.has(ModDataComponents.CASSETTE_DATA.get())) {
+            CassetteData oldData = playingStack.get(ModDataComponents.CASSETTE_DATA.get());
+            if (oldData != null) {
+                playingStack.set(ModDataComponents.CASSETTE_DATA.get(),
+                        new CassetteData(oldData.uuid(), oldData.url(), oldData.name(), oldData.color(), -1.0f,
                                 oldData.duration(), oldData.authorUuid()));
 
                 if (isPlayingFromBag()) {

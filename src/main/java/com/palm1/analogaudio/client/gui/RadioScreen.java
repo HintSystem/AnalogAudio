@@ -73,6 +73,7 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
 
     private float dialRotation = 0;
     private boolean isDraggingDial = false;
+    private int resetCooldownTicks = 0;
 
     public RadioScreen(RadioMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -108,7 +109,7 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
                 ResourceLocation tex = PLAY_SPRITE;
                 if (this.isHovered()) {
                     if (GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(),
-                            GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS) {
+                             GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS) {
                         tex = PLAY_SELECTED;
                     } else {
                         tex = PLAY_HOVER;
@@ -131,7 +132,7 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
                 ResourceLocation tex = PAUSE_SPRITE;
                 if (this.isHovered()) {
                     if (GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(),
-                            GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS) {
+                             GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS) {
                         tex = PAUSE_SELECTED;
                     } else {
                         tex = PAUSE_HOVER;
@@ -160,7 +161,7 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
                 ResourceLocation tex = shuffle ? SHUFFLE_SELECTED : SHUFFLE_SPRITE;
                 if (this.isHovered() && tex != SHUFFLE_SELECTED) {
                     if (GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(),
-                            GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS) {
+                             GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS) {
                         tex = SHUFFLE_SELECTED;
                     } else {
                         tex = SHUFFLE_HOVER;
@@ -207,6 +208,9 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
     @Override
     protected void containerTick() {
         super.containerTick();
+        if (resetCooldownTicks > 0) {
+            resetCooldownTicks--;
+        }
         if (this.menu.getBlockEntity() != null && !isDraggingDial) {
             RadioBlockEntity be = this.menu.getBlockEntity();
             this.volume = be.getVolume();
@@ -224,7 +228,10 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
 
     private void sendUpdate() {
         PacketDistributor
-                .sendToServer(new UpdateRadioSettingsC2SPacket(this.menu.getPos(), volume, looping, playing, shuffle));
+                .sendToServer(new UpdateRadioSettingsC2SPacket(this.menu.getPos(), volume, looping, playing, shuffle, false));
+        if (this.menu.getBlockEntity() != null) {
+            this.menu.getBlockEntity().setSettings(volume, looping, playing, shuffle, false);
+        }
     }
 
     @Override
@@ -315,8 +322,24 @@ public class RadioScreen extends AbstractContainerScreen<RadioMenu> {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (isHovering(140, 44, 16, 16, mouseX, mouseY)) {
-            isDraggingDial = true;
-            return true;
+            if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+                if (this.resetCooldownTicks > 0) {
+                    return true;
+                }
+                this.volume = 0.75f;
+                this.dialRotation = (volume / 1.5f * 270.0f) - 135.0f;
+                this.resetCooldownTicks = 10; // 0.5 second spam cooldown
+                Minecraft.getInstance().getSoundManager()
+                        .play(SimpleSoundInstance.forUI(ModSounds.FREQUENCY_TICK.get(), 1.0f + (volume * 0.5f), 1.0f));
+                PacketDistributor.sendToServer(new UpdateRadioSettingsC2SPacket(this.menu.getPos(), volume, looping, playing, shuffle, true));
+                if (this.menu.getBlockEntity() != null) {
+                    this.menu.getBlockEntity().setSettings(volume, looping, playing, shuffle, true);
+                }
+                return true;
+            } else {
+                isDraggingDial = true;
+                return true;
+            }
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
