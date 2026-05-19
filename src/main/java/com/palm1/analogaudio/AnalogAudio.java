@@ -16,6 +16,7 @@ import su.plo.voice.api.server.PlasmoVoiceServer;
 @Mod(AnalogAudio.MODID)
 public class AnalogAudio {
     public static final String MODID = "analogaudio";
+    public static final String ANALOGPLAYER_VERSION = "1.0.2";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public AnalogAudio(IEventBus modEventBus, ModContainer modContainer) {

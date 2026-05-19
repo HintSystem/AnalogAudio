@@ -181,5 +181,12 @@
   "analogaudio.ponder.speaker_redstone.header": "Speakers and Redstone",
   "analogaudio.ponder.speaker_redstone.text_1": "Speakers will output a redstone signal when a player is talking.",
   "analogaudio.ponder.speaker_display_link.header": "Speaker Displays",
-  "analogaudio.ponder.speaker_display_link.text_1": "Display links will display the name of a player when they are talking."
+  "analogaudio.ponder.speaker_display_link.text_1": "Display links will display the name of a player when they are talking.",
+  // Command Translations
+  "commands.analogaudio.cassette.write.resolving": "Resolving audio track details...",
+  "commands.analogaudio.cassette.write.success": "You have been given a cassette: %s",
+  "commands.analogaudio.cassette.playlist.resolving": "Resolving playlist details...",
+  "commands.analogaudio.cassette.playlist.empty": "No songs found in the playlist.",
+  "commands.analogaudio.cassette.playlist.success": "You have been given a cassette bag with %s song(s) from the playlist!",
+  "commands.analogaudio.cassette.playlist.failed": "Failed to resolve playlist: %s"
 }
