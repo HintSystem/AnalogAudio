@@ -46,6 +46,7 @@ public class AnalogAudio {
             }
         }
 
+        modEventBus.addListener(ModTooltipComponents::registerTooltipComponents);
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(AnalogAudioNetwork::registerPayloads);
         modEventBus.register(ModCapabilities.class);
